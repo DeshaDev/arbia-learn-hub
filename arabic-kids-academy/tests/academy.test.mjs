@@ -40,6 +40,6 @@ assert.ok(js.includes("if(!state.writeReady)"), "a lesson cannot be completed wi
 assert.ok(js.includes("state.readingAnswer===v.sound"), "vowel practice should require a correct answer before advancing");
 assert.ok(!js.slice(js.indexOf("function renderLesson()"), js.indexOf("function renderReading(", js.indexOf("function renderLesson()"))).includes("lesson-object"), "the focused lesson scene should not place floating unrelated objects in the sky");
 assert.ok(rabbit.includes("@keyframes") && rabbit.includes("Али"), "animated mascot must exist");
-assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes("@keyframes rabbitWalk"), "lesson and world scene styles must exist");
+assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes("@keyframes rabbit-hops-to-letter"), "lesson and world scene styles must exist");
 assert.ok(css.includes("@media(max-width:620px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
 console.log("PASS: 28 letters, 8 learning views, 4 game modes, sound, tracing, save-state, animated rabbit, responsive design.");
