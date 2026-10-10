@@ -6,10 +6,10 @@ const js = readFileSync(new URL("app.js", root), "utf8");
 const css = readFileSync(new URL("styles.css", root), "utf8");
 const rabbit = readFileSync(new URL("assets/rabbit.svg", root), "utf8");
 assert.equal((js.match(/^\s*\{ch:'/gm) || []).length, 28, "28 letter entries must exist");
-for (const name of ["renderHome", "renderPath", "renderLetters", "renderLesson", "renderWords", "renderPhrases", "renderGames", "renderProfile"]) {
+for (const name of ["renderHome", "renderPath", "renderLetters", "renderLesson", "renderWords", "renderPhrases", "renderGames", "renderProfile", "renderCelebration"]) {
   assert.ok(js.includes("function " + name + "("), "missing academy view: " + name);
 }
-for (const name of ["meet-letter", "complete-lesson", "wireCanvas", "pickMemory", "advanceGame", "markMission", "saveState"]) {
+for (const name of ["meet-letter", "complete-lesson", "next-letter", "wireCanvas", "pickMemory", "advanceGame", "markMission", "saveState"]) {
   assert.ok(js.includes(name), "missing interactive mechanic: " + name);
 }
 for (const game of ["catch", "mail", "memory", "listen"]) {
