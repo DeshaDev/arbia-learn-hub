@@ -308,7 +308,7 @@ function renderGameStage(){
   if(kind==='catch'){
     prompt='Какой буквой начинается это слово?';
     soundButton='<button class="btn btn-ghost btn-small" data-action="game-speak">🔊 Послушать слово</button>';
-    options=g.options.map(function(l){return '<button data-action="game-answer" data-i="'+l.i+'"><span class="arabic">'+l.ch+'</span><small>'+l.name+'</small></button>';}).join('');
+    options=g.options.map(function(l){return '<button data-action="game-answer" data-i="'+l.idx+'"><span class="arabic">'+l.ch+'</span><small>'+l.name+'</small></button>';}).join('');
   }else if(kind==='mail'){
     prompt='Какое письмо отправим? Найди слово, которое начинается с этой буквы.';
     options=g.options.map(function(w){return '<button data-action="game-answer-word" data-word="'+WORDS.indexOf(w)+'">'+w.emoji+'<small>'+w.ru+'</small><span class="arabic" style="font-size:23px">'+w.ar+'</span></button>';}).join('');
