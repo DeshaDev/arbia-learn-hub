@@ -1,0 +1,21 @@
+name: Validate Arabic Kids Academy
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arabic-kids-academy
+    paths:
+      - 'arabic-kids-academy/**'
+      - '.github/workflows/validate-arabic-kids-academy.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check arabic-kids-academy/app.js
+      - name: Test academy structure and features
+        run: node arabic-kids-academy/tests/academy.test.mjs
