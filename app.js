@@ -28,7 +28,7 @@ function hub(){clr();const nx=L.findIndex(l=>!S.d[l.i]),all=nx<0;
     <button class="btn g" data-a="learn" data-i="${all?0:nx}"><span class="ar">${nx==0?'ابدأ تعلم الحروف العربية':all?'راجع من البداية':'تابع التعلم'}</span><small>${nx==0?'Начать учить арабские буквы':all?'Повторить с начала':'Продолжить'}</small></button>
   </div>
   <div class="welcome-mascot"><img src="./assets/mascot.svg" alt="Зайчик-помощник в изучении арабских букв"></div>
-</section>`<h3>Игры</h3><div class="games">${GM.map(g=>`<button class="gm ${canPlay()?'':'lock'}" data-a="${g.k}"><i>${g.ic}</i><span>${g.t}<br><small style="font-weight:600">${canPlay()?'Нажми, чтобы играть':'Выучи сначала 3 буквы'}</small></span></button>`).join('')}</div><h3>Буквы</h3>${secs}`}
+</section><h3>Игры</h3><div class="games">${GM.map(g=>`<button class="gm ${canPlay()?'':'lock'}" data-a="${g.k}"><i>${g.ic}</i><span>${g.t}<br><small style="font-weight:600">${canPlay()?'Нажми, чтобы играть':'Выучи сначала 3 буквы'}</small></span></button>`).join('')}</div><h3>Буквы</h3>${secs}`}
 function lines(l){const dots=l.dots?l.dots+'.':'Точек у неё нет.';
  return [`Привет! Давай познакомимся с ${l.ord} арабской буквой!`,`Это буква ${l.nm} (${l.ar}). Она похожа на ${l.shape}. ${dots}`,`Посмотри: слово «${l.tr}» — ${l.ru} — начинается с этой буквы!`,l.hard?'Этот звук трудный: такого нет в русском языке. Попроси взрослого включить запись носителя языка!':`Звук буквы — «${l.sn}». Послушай и скажи вместе со мной!`,`Пишем эту букву ${l.i==0?'сверху вниз ↓':'справа налево ←'}. Теперь обведём её!`]}
 function learn(i){clr();cur=i;const l=L[i],c=COL[i],ln=lines(l);
