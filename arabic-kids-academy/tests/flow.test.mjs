@@ -58,10 +58,9 @@ assert.equal(vm.runInContext("state.letter",context),0,"the first lesson should 
 assert.match(app.innerHTML,/scene-discover/, "the lesson should begin in the story scene");
 vm.runInContext("handleAction('meet-letter',{dataset:{}})",context);
 assert.equal(vm.runInContext("state.lessonStep",context),1,"rabbit's arrival should advance the story");
-assert.match(app.innerHTML,/Алиф!/, "the reveal should name the first letter");
-assert.match(app.innerHTML,/أسد[\s\S]*лев/, "Alif should be taught with a lion example, not the rabbit mascot");
-assert.match(app.innerHTML,/discovery-showcase[\s\S]*?letter-friends\.svg#lion/, "Alif should appear next to its custom SVG lion illustration");
-assert.match(app.innerHTML,/class="discovery-letter arabic"[\s\S]*?ا/, "the Arabic letter should be large next to the SVG friend");
+assert.match(app.innerHTML,/solo-letter-button/, "the lesson should show a large letter on its own");
+assert.match(app.innerHTML,/ا/, "the first letter is Alif");
+assert.doesNotMatch(app.innerHTML,/letter-friends\.svg#lion|أسد|лев/, "the letter stage must hide image and word");
 const examples = JSON.parse(JSON.stringify(vm.runInContext("LETTERS.map((letter,i)=>({letter:letter.ch,example:letterWord(letter)}))",context)));
 assert.equal(examples.length,28,"every Arabic letter should have a visual example");
 assert.deepEqual(
@@ -72,15 +71,29 @@ assert.deepEqual(
 assert.ok(examples.every((x,i)=>x.example.idx===i),"each of the 28 letters should map to its own indexed example");
 
 vm.runInContext("handleAction('speak-letter',{dataset:{}})",context);
-vm.runInContext("handleAction('speak-word',{dataset:{}})",context);
+assert.equal(vm.runInContext("state.lessonChecks.heardLetter",context),true,"the letter-only step registers listening");
+assert.doesNotMatch(app.innerHTML,/letter-friends\.svg#lion|أسد|лев/,"the letter-only step must not reveal image or word");
 vm.runInContext("handleAction('i-repeated',{dataset:{}})",context);
-assert.equal(vm.runInContext("state.lessonChecks.repeated",context),true,"the child must confirm repeating before moving on");
+assert.equal(vm.runInContext("state.lessonChecks.repeated",context),true,"the child confirms repeating the letter");
 vm.runInContext("handleAction('lesson-next',{dataset:{}})",context);
-assert.equal(vm.runInContext("state.lessonStep",context),2,"the story should move to recognition after listening and repeating");
-assert.match(app.innerHTML,/Найди такую же букву!/, "recognition should ask one clear question");
+assert.equal(vm.runInContext("state.lessonStep",context),2,"the letter stage leads to image discovery");
+assert.match(app.innerHTML,/letter-friends\.svg#lion/,"the lion image should be shown alone");
+assert.doesNotMatch(app.innerHTML,/أسد|лев/,"the word must remain hidden in image stage");
+vm.runInContext("handleAction('find-word-friend',{dataset:{}})",context);
+assert.equal(vm.runInContext("state.lessonChecks.foundFriend",context),true,"the child must activate the illustration");
+vm.runInContext("handleAction('lesson-next',{dataset:{}})",context);
+assert.equal(vm.runInContext("state.lessonStep",context),3,"the image interaction unlocks the word");
+assert.match(app.innerHTML,/word-initial-hit/,"the word initial must be individually tappable");
+assert.match(app.innerHTML,/أسد[\s\S]*лев/,"revealed word should show Arabic and Russian");
+vm.runInContext("handleAction('word-initial',{dataset:{}})",context);
+vm.runInContext("handleAction('speak-word',{dataset:{}})",context);
+vm.runInContext("handleAction('repeat-word',{dataset:{}})",context);
+vm.runInContext("handleAction('lesson-next',{dataset:{}})",context);
+assert.equal(vm.runInContext("state.lessonStep",context),4,"word step completes before recall");
+assert.match(app.innerHTML,/Какой буквой начинается слово/,"recall links the word to its initial letter");
 vm.runInContext("answerLetter(0)",context);
-assert.equal(vm.runInContext("state.lessonStep",context),3,"correct recognition should lead to handwriting");
-assert.match(app.innerHTML,/Нарисуй Алиф!/, "the final lesson step should be writing practice");
+assert.equal(vm.runInContext("state.lessonStep",context),5,"correct recall leads to handwriting");
+assert.match(app.innerHTML,/Нарисуй Алиф!/, "final stage is handwriting");
 const canvas = elements.get("trace-canvas");
 assert.ok(canvas && canvas.listeners.pointerdown && canvas.listeners.pointermove, "the writing canvas should register pointer input");
 canvas.listeners.pointerdown({clientX:15,clientY:20,pointerId:1,preventDefault(){}});
@@ -93,8 +106,17 @@ assert.match(app.innerHTML,/kid-celebration/, "the child should see the reward m
 vm.runInContext("handleAction('next-letter',{dataset:{}})",context);
 assert.equal(vm.runInContext("state.letter",context),1,"after Alif, the next lesson should be Ba");
 vm.runInContext("handleAction('meet-letter',{dataset:{}})",context);
-assert.match(app.innerHTML,/بطة[\s\S]*утка/, "Ba's reveal should show duck in Arabic and Russian");
-assert.match(app.innerHTML,/discovery-showcase[\s\S]*?letter-friends\.svg#duck/, "Ba should feature a custom SVG duck next to the large Arabic letter");
+assert.match(app.innerHTML,/solo-letter-button[\s\S]*ب/, "Ba begins with its large letter alone");
+assert.doesNotMatch(app.innerHTML,/letter-friends\.svg#duck|بطة|утка/, "Ba should not reveal its object or word at once");
+vm.runInContext("handleAction('speak-letter',{dataset:{}})",context);
+vm.runInContext("handleAction('i-repeated',{dataset:{}})",context);
+vm.runInContext("handleAction('lesson-next',{dataset:{}})",context);
+assert.match(app.innerHTML,/letter-friends\.svg#duck/, "Ba picture is a separate step");
+assert.doesNotMatch(app.innerHTML,/بطة|утка/, "picture step keeps the word hidden");
+vm.runInContext("handleAction('find-word-friend',{dataset:{}})",context);
+vm.runInContext("handleAction('lesson-next',{dataset:{}})",context);
+assert.match(app.innerHTML,/بطة[\s\S]*утка/, "Ba word is revealed only after tapping its illustration");
+assert.match(app.innerHTML,/word-initial-hit[\s\S]*ب/, "the initial letter is highlighted and tappable");
 
 
 for (const kind of ["catch","mail","listen"]) {
@@ -137,4 +159,15 @@ vm.runInContext("handleAction('memory-pick',{dataset:{card:String("+letterCard+"
 vm.runInContext("handleAction('memory-pick',{dataset:{card:String("+wordCard+")}})",context);
 assert.equal(vm.runInContext("state.game.matched.length",context),2,"memory should match the letter to the SVG friend");
 
-console.log("PASS: fresh home → SVG letter lessons → handwriting → celebration → four interactive game modes.");
+vm.runInContext("state.revealedWords=[];state.view='words';render()",context);
+assert.doesNotMatch(app.innerHTML,/أسد/,"word garden hides words until picture is opened");
+vm.runInContext("handleAction('reveal-word',{dataset:{word:'0'}})",context);
+assert.match(app.innerHTML,/أسد/,"opening an image reveals its matching word");
+assert.ok(vm.runInContext("state.revealedWords.includes(0)",context),"opened word progress is recorded");
+vm.runInContext("state.phraseTask=0;state.phraseAnswer=null;state.view='phrases';render()",context);
+assert.match(app.innerHTML,/Ты встретил Али/,"phrases begin with a real conversation scene");
+vm.runInContext("handleAction('phrase-answer',{dataset:{i:'0'}})",context);
+assert.equal(vm.runInContext("state.phraseAnswer",context),0,"a correct contextual phrase must be accepted");
+assert.match(app.innerHTML,/phrase-correct-reveal/,"correct phrase reveals Arabic and the listening control");
+
+console.log("PASS: staged letter → image-only → highlighted word → recall → writing; word garden, phrase dialogue, and games.");

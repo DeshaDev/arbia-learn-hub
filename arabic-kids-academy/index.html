@@ -20,11 +20,11 @@
       <span class="brand-label"><strong>Али и арабский мир</strong><small>Учимся играя</small></span>
     </a>
     <nav class="main-nav" aria-label="Навигация">
-      <button class="nav-link" data-route="path"><span>🗺</span>Моя карта</button>
+      <button class="nav-link" data-route="path"><svg class="header-icon" viewBox="0 0 160 160" aria-hidden="true"><use href="./assets/letter-friends.svg#map-icon"></use></svg>Моя карта</button>
     </nav>
     <div class="top-actions">
-      <div class="xp-chip" title="Собранные звёздочки"><span>⭐</span><b id="xp-count">0</b><small>звёзд</small></div>
-      <button id="sound-toggle" class="icon-button" aria-label="Включить или выключить звук">🔊</button>
+      <div class="xp-chip" title="Собранные звёздочки"><svg class="header-icon" viewBox="0 0 160 160" aria-hidden="true"><use href="./assets/letter-friends.svg#starburst"></use></svg><b id="xp-count">0</b><small>звёзд</small></div>
+      <button id="sound-toggle" class="icon-button" aria-label="Включить или выключить звук"><svg class="header-icon sound-toggle-svg" viewBox="0 0 160 160" aria-hidden="true"><use href="./assets/letter-friends.svg#ear-icon"></use></svg></button>
     </div>
     <button class="mobile-menu" id="mobile-menu" aria-label="Открыть меню">☰</button>
   </header>
@@ -40,6 +40,7 @@
     <small class="copyright">Учимся с любопытством ♡</small>
   </footer>
   <div id="modal-root"></div>
+  <div id="success-effects" aria-live="polite"></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="./app.js" defer></script>
 </body>

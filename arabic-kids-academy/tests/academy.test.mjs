@@ -44,14 +44,18 @@ assert.ok(rabbit.includes("@keyframes") && rabbit.includes("Али"), "animated 
 assert.ok(css.includes(".adventure-stage") && css.includes(".lesson-scene") && css.includes("@keyframes rabbit-hops-to-letter"), "lesson and world scene styles must exist");
 assert.ok(css.includes("@media(max-width:680px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
 assert.ok(js.includes("function svgArt(") && js.includes("const OBJECT_ARTS="), "lesson and vocabulary illustrations must be SVG-backed");
+assert.ok(js.includes("function highlightedArabic(word)") && js.includes("function showSuccessEffect(message)"), "highlighted word and visible correct-answer reward must exist");
+assert.ok(js.includes("letter-only-stage") && js.includes("friend-hunt-stage") && js.includes("word-reveal-stage"), "letter, image, and word must be separate lesson stages");
+assert.ok(js.includes('data-action="reveal-word"') && js.includes('data-action="phrase-answer"'), "word and phrase sections must require child action");
 assert.ok(js.includes("discovery-showcase") && js.includes("discovery-letter arabic"), "the large Arabic letter must appear next to its matching SVG friend");
 assert.ok(js.includes("state.lessonChecks") && js.includes("data-action=\"i-repeated\""), "the child must listen to both items and confirm repeating before continuing");
 assert.ok(js.includes("game-challenge-panel") && js.includes("data-action=\"game-next\""), "game rounds must have deliberate feedback and manual progression");
 assert.ok(js.includes("id:'catch',art:'hop-game'") && js.includes("id:'mail',art:'mail-game'") && js.includes("id:'memory',art:'memory-game'") && js.includes("id:'listen',art:'listen-game'"), "each game should have its own SVG mechanic");
-for (const id of ["lion","duck","apple","fox","camel","horse","sheep","bear","corn","pomegranate","giraffe","fish","sun","eagle","frog","airplane","envelope","eye","cloud","elephant","moon","book","lemon","banana","bee","crescent","rose","hand","water","door","house","heart","hop-game","mail-game","memory-game","listen-game","mailbox"]) {
+for (const id of ["lion","duck","apple","fox","camel","horse","sheep","bear","corn","pomegranate","giraffe","fish","sun","eagle","frog","airplane","envelope","eye","cloud","elephant","moon","book","lemon","banana","bee","crescent","rose","hand","water","door","house","heart","hop-game","mail-game","memory-game","listen-game","mailbox","starburst","sparkle","book-icon","map-icon","ear-icon","lock-icon","speech-icon"]) {
   assert.ok(friends.includes('<symbol id="'+id+'"'), "missing custom SVG symbol: " + id);
 }
 assert.ok(css.includes(".discovery-showcase") && css.includes(".games-world-grid") && css.includes(".letter-jump-grid") && css.includes(".picture-choice-grid"), "SVG discovery and bespoke game layouts must be styled");
+assert.ok(css.includes(".letter-only-stage") && css.includes(".friend-hunt-stage") && css.includes(".word-reveal-stage") && css.includes("#success-effects.active"), "sequential lesson and success styles must exist");
 assert.ok(css.includes(".discovery-letter{width:100%;height:112px") && css.includes(".discovery-letter{height:100px;font-size:clamp(65px,19vw,78px)"), "mobile overrides must preserve a large Arabic letter beside its SVG object");
 assert.ok(js.includes('data-action="mail-select"') && js.includes('data-action="mail-deliver"'), "the mail game must have a two-step select-and-deliver interaction");
 assert.ok(js.includes("g.answered||!g.heard"), "sound games must require audio before answering");
