@@ -92,8 +92,8 @@ const BADGES = [
  {id:'xp100',icon:'⭐',title:'Сто звёздных шагов',desc:'Набери 100 XP',ok:s=>s.xp>=100},
  {id:'streak3',icon:'🔥',title:'Привычка растёт',desc:'Занимайся 3 дня подряд',ok:s=>s.streak>=3}
 ];
-const STORE_KEY = 'ali-academy-progress-v2';
-function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false,writeReady:false,readingIndex:0,readingAnswer:''};}
+const STORE_KEY = 'ali-academy-progress-v3';
+function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false,writeReady:false,readingIndex:0,readingAnswer:'',readingCompleted:false};}
 function loadState(){
   try{
     const raw=JSON.parse(localStorage.getItem(STORE_KEY)||'null');
@@ -127,13 +127,20 @@ function randomItems(arr,n,exclude){const pool=arr.filter(x=>exclude===undefined
 function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function rabbit(){return '<img class="heading-mascot" src="./assets/rabbit.svg" alt="Али, зайчик-путешественник">';}
 function updateHeader(){
-  const xp=document.getElementById('xp-count'),st=document.getElementById('streak-count');
-  if(xp)xp.textContent=state.xp;
-  if(st)st.textContent=state.streak||1;
+  const xp=document.getElementById('xp-count');
+  if(xp)xp.textContent=state.stars;
   document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===state.view||((state.view==='lesson'||state.view==='celebration')&&b.dataset.route==='letters')||(state.view==='profile'&&b.dataset.route==='profile')||(state.view==='phrases'&&b.dataset.route==='words'||state.view==='reading'&&b.dataset.route==='reading'));});
+}
+function canVisit(view){
+  if(view==='reading'&&state.learned.length<3&&!state.readingCompleted)return false;
+  if(view==='phrases'&&state.learned.length<3)return false;
+  if(view==='words'&&state.learned.length<1)return false;
+  if(view==='games'&&state.learned.length<1)return false;
+  return true;
 }
 function route(view){
   if(!view)view='home';
+  if(!canVisit(view)){toast(view==='reading'?'Сначала открой 3 буквы — затем отправимся читать! 🔤':view==='phrases'?'Открой 3 буквы, чтобы встретить друзей! 🔤':'Сначала познакомься с первой буквой вместе с Али! 🐰');view='home';}
   state.view=view;saveState();
   const mobile=document.getElementById('mobile-nav');if(mobile)mobile.classList.remove('open');
   try{history.replaceState(null,'','#'+view);}catch(e){}
@@ -171,24 +178,21 @@ function render(){
   if(state.view==='words')wireWordSearch();
 }
 function renderHome(){
-  const learnedCount=state.learned.length,nx=nextLetter(),pct=Math.round(learnedCount/28*100),level=xpLevel();
-  const done=missionDoneCount();
-  let cards='';
-  const pathCards=[
-    {icon:'🔤',no:'МИР 01 · СТАРТ',title:'Остров букв',desc:'Знакомься с формой, точками и звучанием 28 букв.',route:'letters',count:learnedCount+' / 28 букв'},
-    {icon:'🍎',no:'МИР 02 · СЛОВА',title:'Сад слов',desc:'Открывай названия животных, предметов и природы.',route:'words',count:WORDS.length+' слов'},
-    {icon:'💬',no:'МИР 03 · РАЗГОВОР',title:'Площадь фраз',desc:'Приветствия, вежливые слова и первые диалоги.',route:'phrases',count:PHRASES.length+' фраз'},
-    {icon:'🎮',no:'МИР 04 · ИГРЫ',title:'Игровая долина',desc:'Лови буквы, доставляй письма и собирай пары.',route:'games',count:GAME_DEFS.length+' игр'}
+  const learned=state.learned.length, nx=learned>=28?27:nextLetter(), l=LETTERS[nx], first=learned===0, complete=learned>=28;
+  const stepDots=LETTERS.slice(0,7).map(function(x,i){
+    const done=state.learned.indexOf(i)>=0,active=i===nx;
+    return '<span class="tiny-map-dot '+(done?'done':active?'active':'')+'">'+(done?'✓':i+1)+'</span>';
+  }).join('');
+  const worlds=[
+    {id:'letters',icon:'🔤',name:'Остров букв',hint:learned+'/28',open:true},
+    {id:'reading',icon:'📖',name:'Долина чтения',hint:state.readingCompleted?'Пройдено':'Найди 3 буквы',open:learned>=3||state.readingCompleted},
+    {id:'words',icon:'🌼',name:'Сад слов',hint:WORDS.length+' слов',open:learned>=1},
+    {id:'games',icon:'🎮',name:'Игровая поляна',hint:'Играй и собирай',open:learned>=1}
   ];
-  pathCards.forEach(function(c){cards+='<button class="path-card" data-route="'+c.route+'"><span class="step-icon">'+c.icon+'</span><span class="step-no">'+c.no+'</span><strong>'+c.title+'</strong><p>'+c.desc+'</p><span class="muted tiny">'+c.count+'</span><span class="card-arrow">↗</span></button>';});
-  const mini=LETTERS.slice(0,7).map(function(l,i){return '<button class="map-step '+(state.learned.indexOf(i)>=0?'done':i===nx?'current':i>nx?'locked':'')+'" data-action="open-letter" data-i="'+i+'"><strong>'+l.ch+'</strong><small>'+(state.learned.indexOf(i)>=0?'✓':String(i+1).padStart(2,'0'))+'</small></button>';}).join('');
-  const missions=[
-    {id:'lesson',icon:'📖',title:'Пройди один урок',desc:'Познакомься с новой буквой',reward:'+15 XP'},
-    {id:'game',icon:'🎯',title:'Сыграй один раунд',desc:'Потренируй память в игре',reward:'+10 XP'},
-    {id:'listen',icon:'🔊',title:'Послушай слово',desc:'Открой словарную карточку и включи звук',reward:'+5 XP'}
-  ];
-  const missionHTML=missions.map(function(m){return '<div class="quest '+(state.missions[m.id]?'done':'')+'"><span class="quest-check">'+(state.missions[m.id]?'✓':m.icon)+'</span><div><b>'+m.title+'</b><small>'+m.desc+'</small></div><span class="reward">'+(state.missions[m.id]?'ГОТОВО':m.reward)+'</span></div>';}).join('');
-  return '<section class="hero"><div class="hero-copy"><span class="pill">✨ ТВОЁ ЯЗЫКОВОЕ ПРИКЛЮЧЕНИЕ</span><h1>Арабский мир<br>начинается с <em>буквы.</em></h1><p>Путешествуй вместе с Али: узнавай буквы, собирай слова, слушай арабскую речь и открывай новые миры. Здесь можно учиться играя — в своём темпе.</p><div class="hero-actions"><button class="btn btn-primary" data-action="continue">Продолжить путь <span>→</span></button><button class="btn btn-ghost" data-route="path">Посмотреть карту</button></div><div class="hero-trust"><span><i>✓</i> Короткие уроки</span><span><i>✓</i> Игры и награды</span><span><i>✓</i> Прогресс сохраняется</span></div></div><div class="hero-world" id="hero-world"><span class="sun"></span><span class="cloud cloud-one"></span><span class="cloud cloud-two"></span><span class="world-hill hill-one"></span><span class="world-hill hill-two"></span><span class="pathway"></span><span class="speech-bubble" id="hero-bubble"><strong>Привет! Я Али 🐰</strong>Давай найдём первую букву и узнаем, как она звучит!</span><div class="hero-letter" id="hero-letter"><span class="arabic" lang="ar" dir="rtl">'+LETTERS[nx].ch+'</span><small>'+(nx===0?'Алиф · первая буква':LETTERS[nx].name+' · твой следующий шаг')+'</small></div><span class="letter-spark">✦</span><span class="floating-star star-one">✦</span><span class="floating-star star-two">✧</span><img class="rabbit-hero" id="hero-rabbit" src="./assets/rabbit.svg" alt="Али, зайчик-проводник"><span class="world-flower flower-one">🌼</span><span class="world-flower flower-two">🌷</span><span class="world-label">СТАРТ ПУТЕШЕСТВИЯ</span></div></section><section class="kpi-row"><div class="kpi"><span class="kpi-icon">🔤</span><div><strong>'+learnedCount+' / 28</strong><small>букв уже знакомы</small></div></div><div class="kpi"><span class="kpi-icon">⭐</span><div><strong>'+state.xp+' XP</strong><small>твой опыт</small></div></div><div class="kpi"><span class="kpi-icon">🔥</span><div><strong>'+state.streak+' '+plural(state.streak,['день','дня','дней'])+'</strong><small>серия занятий</small></div></div><div class="kpi"><span class="kpi-icon">🏅</span><div><strong>Уровень '+level+'</strong><small>'+(100-xpIntoLevel())+' XP до следующего</small></div></div></section><section class="mission-strip"><span class="mission-icon">🧭</span><div><b>Твоё задание на сегодня</b><p>Выполни три маленьких миссии — и день станет ещё ярче.</p><div class="progress-line" style="margin-top:9px"><i style="width:'+(done/3*100)+'%"></i></div></div><span class="mission-reward">'+done+' / 3 выполнено</span></section>'+sectionTitle('ТВОЯ КАРТА ПРИКЛЮЧЕНИЙ','Куда отправимся сегодня?','Каждый мир помогает освоить новый навык.','path','Весь путь')+'<div class="path-preview">'+cards+'</div><div class="content-grid"><section class="panel"><div class="panel-head"><div><h3>Остров букв</h3><small>Первые шаги к алфавиту</small></div><button class="text-link" data-route="letters">Все буквы →</button></div><div class="progress-line"><i style="width:'+pct+'%"></i></div><div class="panel-bottom"><p>'+pct+'% пути пройдено<br><b style="color:var(--ink)">'+(learnedCount===28?'Ты освоил весь алфавит!':'Следующая буква — '+LETTERS[nx].name)+'</b></p><button class="btn btn-purple btn-small" data-action="continue">'+(learnedCount?'Продолжить':'Начать')+' →</button></div><div class="map-steps">'+mini+'</div></section><section class="panel"><div class="panel-head"><div><h3>Маленькие миссии</h3><small>У тебя всё получится</small></div><span class="pill">'+done+'/3</span></div><div class="quest-list">'+missionHTML+'</div></section></div>';
+  const map=worlds.map(function(w){
+    return '<button class="home-world '+(w.open?'open':'locked')+'" data-action="home-world" data-world="'+w.id+'"><span class="home-world-icon">'+w.icon+'</span><span class="home-world-name">'+w.name+'</span><small>'+(w.open?w.hint:'🔒')+'</small></button>';
+  }).join('');
+  return '<section class="kid-welcome"><div class="kid-welcome-copy"><span class="welcome-tag">ПРИВЕТ, ДРУГ! ✨</span><h1>'+(first?'Я Али! Давай найдём первую букву!':complete?'Ты открыл весь алфавит!':'С возвращением! Продолжим?')+'</h1><p>'+(first?'Я покажу тебе арабские буквы. Будем искать, слушать и играть вместе!':complete?'Ура! Все 28 букв в твоей коллекции. Выбирай новую игру!':'Ты уже открыл '+learned+' '+plural(learned,['букву','буквы','букв'])+'! Какую встречу устроим сегодня?')+'</p><button class="btn btn-primary kid-main-cta" data-action="continue">'+(first?'Начать приключение':complete?'Выбрать приключение':'Продолжить путь')+' <span>→</span></button><div class="kid-progress"><div class="kid-progress-label"><span>ТВОЯ КОЛЛЕКЦИЯ БУКВ</span><b>'+learned+' / 28</b></div><div class="progress-line"><i style="width:'+(learned/28*100)+'%"></i></div><div class="tiny-map">'+stepDots+'</div></div></div><div class="hero-world kid-hero-world" id="hero-world"><span class="sun"></span><span class="cloud cloud-one"></span><span class="cloud cloud-two"></span><span class="world-hill hill-one"></span><span class="world-hill hill-two"></span><span class="pathway"></span><span class="speech-bubble kid-speech"><strong>'+(first?'Мархаба! 👋':'Мы снова вместе! 🐰')+'</strong>'+(first?'Это значит «привет»! Пойдём искать букву?':'Посмотрим, что ждёт нас на тропинке!')+'</span><div class="hero-letter kid-hero-letter"><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></div><span class="letter-spark">✦</span><img class="rabbit-hero" id="hero-rabbit" src="./assets/rabbit.svg" alt="Али, твой друг в путешествии"><span class="world-flower flower-one">🌼</span><span class="world-flower flower-two">🌷</span><span class="world-label">'+(first?'НАЧАЛО ПУТЕШЕСТВИЯ':'ТЫ МОЛОДЕЦ!')+'</span></div></section><section class="home-map-section"><div class="kid-section-title"><span class="eyebrow">ТВОЙ МИР</span><h2>Куда отправимся?</h2><p>Открывай новые места по одному.</p></div><div class="home-worlds">'+map+'</div><div class="parent-nudge"><span>👨‍👩‍👧</span><button id="home-parents" data-action="about">Для родителей</button></div></section>';
 }
 function plural(n,forms){const x=Math.abs(n)%100,y=x%10;if(x>10&&x<20)return forms[2];if(y>1&&y<5)return forms[1];if(y===1)return forms[0];return forms[2];}
 const CURRICULUM=[
@@ -200,15 +204,18 @@ const CURRICULUM=[
  {n:'06',title:'Повторение в игре',sub:'Память, выбор и аудирование',icon:'🎮',route:'games',outcomes:['различать знакомые буквы','вспоминать слова без подсказки','учиться на ошибках'],check:'Ученик переносит знания в новую игровую задачу.',status:'Открыто'}
 ];
 function renderPath(){
- const steps=CURRICULUM.map(function(u,i){
-   const routeLabel=u.route==='letters'?'К буквам':u.route==='reading'?'К чтению':u.route==='words'?'В словарь':u.route==='phrases'?'К фразам':'Играть';
-   return '<article class="curriculum-unit"><div class="unit-number">'+u.n+'</div><div class="unit-main"><div class="unit-eyebrow">ЭТАП '+u.n+' · '+u.status.toUpperCase()+'</div><h3>'+u.title+'</h3><p>'+u.sub+'</p><ul>'+u.outcomes.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="unit-check"><span>✓ Критерий освоения</span><p>'+u.check+'</p></div><button class="btn '+(i===0?'btn-purple':'btn-ghost')+' btn-small" data-route="'+u.route+'">'+routeLabel+' →</button></div><div class="unit-illustration">'+u.icon+'</div></article>';
+ const nx=nextLetter(),learned=state.learned.length;
+ const worlds=[
+  {n:'01',icon:'🔤',title:'Остров букв',desc:'Узнай первую букву',route:'letters',open:true,progress:learned+'/28'},
+  {n:'02',icon:'📖',title:'Долина чтения',desc:'Играй со звуками',route:'reading',open:learned>=3||state.readingCompleted,progress:state.readingCompleted?'✓':'3 буквы'},
+  {n:'03',icon:'🌼',title:'Сад слов',desc:'Собирай новые слова',route:'words',open:learned>=1,progress:WORDS.length+' слов'},
+  {n:'04',icon:'🎮',title:'Игровая поляна',desc:'Проверь свою память',route:'games',open:learned>=1,progress:'Играть'},
+  {n:'05',icon:'💬',title:'Площадь друзей',desc:'Скажи первые фразы',route:'phrases',open:learned>=3,progress:PHRASES.length+' фраз'}
+ ];
+ const cards=worlds.map(function(w,i){
+   return '<button class="map-world '+(w.open?'open':'locked')+' '+(w.route==='letters'?'first-world':'')+'" data-action="home-world" data-world="'+w.route+'"><span class="map-world-number">'+w.n+'</span><span class="map-world-art">'+w.icon+'</span><strong>'+w.title+'</strong><small>'+w.desc+'</small><span class="map-world-state">'+(w.open?w.progress:'🔒 Сначала ещё '+Math.max(1,(w.route==='reading'?3:3)-learned)+' буквы')+'</span><span class="map-world-arrow">'+(w.open?'→':'🔒')+'</span></button>';
  }).join('');
- return headerOf('УЧЕБНЫЙ МАРШРУТ','Не просто играть — учиться','Последовательность рассчитана на начинающих детей: сначала форма буквы, затем различение, чтение коротких слогов, слова и первые фразы. Каждый этап описывает, чему именно ребёнок должен научиться.',true)
- +'<section class="curriculum-note"><span>📘</span><div><strong>Как устроен курс</strong><p>Это проектная учебная программа, а не официально аккредитованный курс. Цели сформулированы как наблюдаемые действия ученика с ориентиром на подход «Can-Do» ACTFL и уровень Pre-A1 CEFR; это не означает сертифицированного соответствия. Перед использованием как формального курса нужны экспертиза преподавателя арабского для детей и тестирование на целевой возрастной группе. <a href="https://www.actfl.org/proficiency-guidelines-overview" target="_blank" rel="noreferrer">ACTFL Proficiency Guidelines ↗</a> · <a href="https://www.coe.int/en/web/education/-/common-european-framework-of-reference-for-languages-learning-teaching-assessment-14" target="_blank" rel="noreferrer">CEFR Companion Volume ↗</a></p></div></section>'
- +'<section class="curriculum-summary"><div><span>🔤</span><strong>28</strong><small>букв</small></div><div><span>◌َ</span><strong>3</strong><small>коротких гласных</small></div><div><span>📚</span><strong>'+WORDS.length+'</strong><small>слов и выражений</small></div><div><span>🎮</span><strong>'+GAME_DEFS.length+'</strong><small>игровых режима</small></div></section>'
- +'<div class="curriculum-list">'+steps+'</div>'
- +'<section class="panel curriculum-next"><div class="curriculum-next-art"><img src="./assets/rabbit.svg" alt="Али"></div><div><div class="eyebrow">ПРИНЦИП ОБУЧЕНИЯ</div><h2>Познакомься → попробуй → вспомни → примени</h2><p>Один экран — одна понятная цель. После короткого объяснения ребёнок выполняет задание, получает обратную связь и применяет навык в игре. Дальше курс постепенно расширяется к чтению и разговору.</p></div></section>';
+ return '<section class="kid-path-page"><header class="path-kid-header"><button class="back-home" data-route="home">← Главная</button><span class="eyebrow">КАРТА ПРИКЛЮЧЕНИЙ</span><h1>Каждый шаг — открытие!</h1><p>Путешествуй с Али. Новые места открываются, когда ты готов.</p></header><div class="storybook-map"><div class="map-sky"><span class="map-cloud cloud-left">☁</span><span class="map-cloud cloud-right">☁</span><span class="map-sun">☀</span><svg class="map-trail" viewBox="0 0 700 600" preserveAspectRatio="none" aria-hidden="true"><path d="M350 35 C120 70 130 175 360 190 S590 295 350 335 S120 460 360 560" fill="none" stroke="#fff6d9" stroke-width="34" stroke-linecap="round"/><path d="M350 35 C120 70 130 175 360 190 S590 295 350 335 S120 460 360 560" fill="none" stroke="#e9c878" stroke-width="5" stroke-linecap="round" stroke-dasharray="3 15"/></svg>'+cards+'<img class="map-rabbit" src="./assets/rabbit.svg" alt="Али показывает дорогу"></div></div><div class="map-parent-link"><span>🌱 Не спеши — будем учиться по одному шагу.</span><button data-action="about">Взрослым</button></div></section>';
 }
 function renderLetters(){
   const nx=nextLetter();
@@ -220,43 +227,28 @@ function renderLetters(){
 }
 function renderLesson(){
   const l=currentLetter(),word=letterWord(l),step=state.lessonStep;
-  const steps=['Встреча','Узнаём форму','Найди букву','Пишем вместе'];
-  let bubble='',sceneExtra='',bottomButton='',rightPanel='';
+  const steps=['Встреча','Узнаём','Находим','Пишем'];
+  const progress='<div class="lesson-progress"><button class="back-home" data-route="home">← Выход</button><div class="lesson-progress-track"><div class="lesson-progress-dots">'+steps.map(function(x,i){return '<span class="'+(i<=step?'on':'')+'"></span>';}).join('')+'</div><small>ШАГ '+(step+1)+' ИЗ 4</small></div></div>';
   if(step===0){
-    bubble='<strong>Привет! Я Али 🐰</strong>Сегодня мы познакомимся с буквой '+l.name+'. Давай подойдём к ней поближе!';
-    bottomButton='<button class="btn btn-primary" data-action="meet-letter">Али, вперёд! <span>→</span></button>';
-    rightPanel='<div class="eyebrow">НАШ НОВЫЙ ДРУГ</div><h2>Это буква '+l.name+'!</h2><div class="large-glyph arabic" lang="ar" dir="rtl">'+l.ch+'</div><div class="letter-name-line"><strong>'+l.name+'</strong><button class="sound-button" data-action="speak-letter" aria-label="Послушать букву">🔊</button></div><p>Посмотри на большую букву. Али поможет заметить её форму, узнать звук и запомнить слово.</p><div class="example-box"><span class="example-emoji">'+word.emoji+'</span><div class="example-word"><small>СЛОВО-ПРИМЕР</small><span class="arabic" lang="ar" dir="rtl">'+word.ar+'</span><strong>'+word.ru+'</strong><small>'+word.tr+'</small></div><button class="sound-button" data-action="speak-word">🔊</button></div>';
-  }else if(step===1){
-    bubble='<strong>Смотри внимательно!</strong>'+l.hint+' Теперь послушаем букву и слово.';
-    bottomButton='<button class="btn btn-purple" data-action="lesson-next">Я готов потренироваться →</button>';
-    rightPanel='<div class="eyebrow">ЗАПОМНИ ФОРМУ</div><h2>Буква '+l.name+'</h2><div class="large-glyph arabic">'+l.ch+'</div><div class="example-box"><span class="example-emoji">👀</span><div class="example-word"><strong>На что похожа?</strong><small>'+l.shape+'</small><small>'+l.dots+'</small></div></div><div class="tip-box">💡 '+l.hint+'</div><div class="actions-row" style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-ghost" data-action="speak-letter">🔊 Буква</button><button class="btn btn-ghost" data-action="speak-word">🔊 Слово</button></div>';
-  }else if(step===2){
-    const opts=shuffle([{idx:state.letter,ch:l.ch,name:l.name}].concat(randomItems(LETTERS.map(function(x,i){return {idx:i,ch:x.ch,name:x.name};}),3,state.letter).map(function(x){return {idx:x.idx,ch:x.ch,name:x.name};})));
-    state.lessonOptions=opts.map(function(x){return x.idx;});
-    bubble='<strong>Мини-задание</strong>Найди букву '+l.name+'. Выбери её среди четырёх вариантов!';
-    bottomButton='<button class="btn btn-ghost" data-action="speak-letter">🔊 Послушать ещё раз</button>';
-    rightPanel='<div class="eyebrow">ПРОВЕРЬ СЕБЯ</div><h2>Где буква '+l.name+'?</h2><p>Вспомни форму и точки, а затем нажми на правильную букву.</p><div class="answer-grid">'+opts.map(function(x){return '<button class="answer-option" data-action="lesson-answer" data-i="'+x.idx+'"><span class="arabic" style="font-size:34px">'+x.ch+'</span><br><small>'+x.name+'</small></button>';}).join('')+'</div><div id="lesson-feedback" class="feedback">'+(quizFeedback||'Ты справишься!')+'</div>';
-  }else{
-    bubble='<strong>Почти готово!</strong>Обведи букву на карточке. Можно рисовать пальцем, мышью или стилусом.';
-    bottomButton='<button class="btn btn-primary" data-action="complete-lesson" '+(state.writeReady?'':'disabled')+'>Завершить урок <span>+20 XP</span></button>';
-    rightPanel='<div class="eyebrow">МАСТЕРСКАЯ ПИСЬМА</div><h2>Попробуй обвести</h2><p>Веди пальцем по пунктирной линии и почувствуй форму буквы.</p><div class="writing-pad"><span class="trace-guide arabic" lang="ar" dir="rtl">'+l.ch+'</span><canvas id="trace-canvas" aria-label="Поле для тренировки написания арабской буквы"></canvas></div><div class="panel-bottom"><p id="writing-status">'+(state.writeReady?'Отлично! Ты уже потренировался.':'Обведи форму, чтобы открыть завершение урока.')+'</p><button class="text-link" data-action="clear-canvas">Очистить ↻</button></div>'
+    const bubble='<strong>Привет! Я Али! 🐰</strong>Поможешь найти мою первую букву?';
+    return '<section class="kid-lesson">'+progress+'<div class="lesson-scene scene-discover"><span class="lesson-sun"></span><span class="lesson-cloud">☁</span><div class="lesson-bubble" id="lesson-bubble">'+bubble+'</div><img class="lesson-character" id="lesson-character" src="./assets/rabbit.svg" alt="Али зовёт ребёнка в путешествие"><div class="lesson-letter" id="lesson-letter"><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></div><span class="scene-caption">НАЙДИ БУКВУ ВМЕСТЕ С АЛИ</span></div><div class="lesson-action-area"><h1>Готов к поиску?</h1><p>Нажми на кнопку — Али подойдёт к букве.</p><button class="btn btn-primary kid-main-cta" data-action="meet-letter">Идём к букве! <span>→</span></button></div></section>';
   }
-  const dots=steps.map(function(s,i){return '<span class="'+(i===step?'active':'')+'"></span>';}).join('');
-  const walking=step===1?'walk':'';
-  return '<div class="page-heading"><div><div class="eyebrow">УРОК '+String(state.letter+1).padStart(2,'0')+' · ОСТРОВ БУКВ</div><h1>Знакомимся: '+l.name+'</h1><p>Учимся через историю, слух, игру и движение — маленькими шагами.</p></div><button class="btn btn-ghost btn-small" data-route="letters">← К буквам</button></div><div class="lesson-layout"><section class="panel lesson-main"><div class="lesson-topline"><span>'+steps[step].toUpperCase()+'</span><span>Шаг '+(step+1)+' из 4</span></div><div class="progress-line"><i style="width:'+((step+1)/4*100)+'%"></i></div><div class="lesson-scene"><span class="lesson-sun"></span><span class="lesson-cloud">☁</span><div class="lesson-bubble" id="lesson-bubble">'+bubble+'</div><span class="lesson-object" aria-hidden="true">✦</span><img class="lesson-character '+walking+'" id="lesson-character" src="./assets/rabbit.svg" alt="Али идёт знакомиться с буквой"><div class="lesson-letter '+(step===1?'reveal':'')+'" id="lesson-letter"><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></div><span class="scene-caption">ТРОПИНКА НОВЫХ ОТКРЫТИЙ</span></div><div class="lesson-bottom"><p>★ За урок ты получишь 20 XP</p>'+bottomButton+'</div><div class="step-dots">'+dots+'</div></section><aside class="panel lesson-info">'+rightPanel+'</aside></div>';
+  if(step===1){
+    return '<section class="kid-lesson">'+progress+'<div class="lesson-mini-scene"><div class="mini-scene-land"></div><img class="mini-rabbit happy" src="./assets/rabbit.svg" alt="Али нашёл букву!"><div class="found-letter"><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><strong>'+l.name+'!</strong></div><span class="found-spark spark-a">✦</span><span class="found-spark spark-b">✧</span></div><div class="lesson-action-area"><span class="pill">🎉 МЫ НАШЛИ ЕЁ!</span><h1>Это '+l.name+'!</h1><p>'+l.dots+'. Запомни её форму: '+l.shape+'.</p><button class="sound-button big-sound" data-action="speak-letter" aria-label="Послушать букву">🔊 Послушать</button><div class="lesson-word-peek"><span>'+word.emoji+'</span><div><span class="arabic" lang="ar" dir="rtl">'+word.ar+'</span><b>'+word.ru+'</b></div><button class="sound-button" data-action="speak-word">🔊</button></div><button class="btn btn-primary kid-main-cta" data-action="lesson-next">Я запомнил! <span>→</span></button></div></section>';
+  }
+  if(step===2){
+    const distractors=shuffle([{idx:state.letter,ch:l.ch,name:l.name}].concat(randomItems(LETTERS.map(function(x,i){return {idx:i,ch:x.ch,name:x.name};}),3,state.letter)));
+    state.lessonOptions=distractors.map(function(x){return x.idx;});
+    return '<section class="kid-lesson">'+progress+'<div class="kid-task-card"><img class="task-rabbit" src="./assets/rabbit.svg" alt=""><span class="eyebrow">ПОМОГИ АЛИ</span><h1>Найди букву '+l.name+'!</h1><div class="task-target arabic" lang="ar" dir="rtl">'+l.ch+'</div><p>Нажми на такую же букву.</p><div class="kid-answer-grid">'+distractors.map(function(x){return '<button class="kid-answer" data-action="lesson-answer" data-i="'+x.idx+'"><span class="arabic" lang="ar" dir="rtl">'+x.ch+'</span></button>';}).join('')+'</div><div id="lesson-feedback" class="kid-feedback">'+(quizFeedback||'Ты справишься! ✨')+'</div><button class="sound-button" data-action="speak-letter">🔊 Послушать букву</button></div></section>';
+  }
+  return '<section class="kid-lesson">'+progress+'<div class="write-task"><div class="write-task-head"><img src="./assets/rabbit.svg" alt=""><div><span class="eyebrow">МАСТЕРСКАЯ АЛИ</span><h1>Нарисуй '+l.name+'!</h1><p>Обведи букву пальцем или мышкой.</p></div></div><div class="writing-pad kid-writing-pad"><span class="trace-guide arabic" lang="ar" dir="rtl">'+l.ch+'</span><canvas id="trace-canvas" aria-label="Поле для тренировки написания арабской буквы"></canvas></div><div class="write-bottom"><span id="writing-status">'+(state.writeReady?'Ура! Можно закончить урок.':'Веди пальцем по форме буквы.')+'</span><button class="text-link" data-action="clear-canvas">Начать заново ↻</button></div><button class="btn btn-primary kid-main-cta" data-action="complete-lesson" '+(state.writeReady?'':'disabled')+'>Я написал! <span>⭐</span></button></div></section>';
 }
 function renderCelebration(){
-  const completed=LETTERS[state.justCompleted==null?0:state.justCompleted],next=nextLetter(),all=state.learned.length>=28;
-  const nextL=LETTERS[next];
-  const title=all?'Ты прошёл весь алфавит!':'Буква '+completed.name+' теперь в твоей коллекции!';
-  const sub=all?'Все 28 букв знакомы тебе. Это большая победа — впереди слова, фразы и новые игры.':'Каждый урок делает тебя увереннее. Отдохни мгновение, а потом отправляйся знакомиться со следующей буквой.';
-  return '<section class="celebration-wrap page-enter"><div class="celebration-top"><span class="celebration-confetti">✦</span><span class="celebration-confetti">✧</span><span class="celebration-confetti">✦</span><span class="celebration-confetti">★</span><span class="celebration-confetti">✧</span></div><div class="surface celebration-card"><div class="celebration-ribbon">🏆 УРОК ЗАВЕРШЁН</div><div class="celebration-main"><div class="celebration-character"><span class="celebration-orbit orbit-one">✦</span><span class="celebration-orbit orbit-two">⭐</span><span class="celebration-orbit orbit-three">✧</span><img src="./assets/rabbit.svg" alt="Али радуется твоей победе"></div><div class="celebration-copy"><span class="pill">✨ МАЛЕНЬКАЯ ПОБЕДА</span><h1>'+title+'</h1><p>'+sub+'</p><div class="celebration-rewards"><div><span>⭐</span><strong>+20 XP</strong><small>за урок</small></div><div><span>🔤</span><strong>'+state.learned.length+' / 28</strong><small>букв знакомы</small></div><div><span>🔥</span><strong>'+state.streak+'</strong><small>дней подряд</small></div></div><div class="celebration-progress"><div class="progress-line"><i style="width:'+(state.learned.length/28*100)+'%"></i></div><small>'+Math.round(state.learned.length/28*100)+'% алфавита открыто</small></div><div class="hero-actions"><button class="btn btn-primary" data-action="next-letter">'+(all?'Повторить буквы':'Встречаем '+nextL.name)+' <span>→</span></button><button class="btn btn-ghost" data-route="path">На карту приключений</button></div></div></div></div><div class="celebration-footer">🌷 Ты старался — и это главное. Али тобой гордится! 🌷</div></section>';
+  const completed=LETTERS[Number.isInteger(state.justCompleted)?state.justCompleted:0];
+  const all=state.learned.length>=28;
+  const next=nextLetter();
+  return '<section class="kid-celebration"><div class="celebration-sky"><span class="celebration-cloud cloud-a">☁</span><span class="celebration-cloud cloud-b">☁</span><span class="celebration-sun">✦</span><div class="celebration-ground"></div><img src="./assets/rabbit.svg" alt="Али радуется вместе с тобой" class="celebration-rabbit"><div class="celebration-sticker">⭐<small>+'+(state.lastLessonStars||1)+'</small></div><span class="celebrate-confetti confetti-one">✦</span><span class="celebrate-confetti confetti-two">✧</span><span class="celebrate-confetti confetti-three">★</span></div><div class="kid-celebration-copy"><span class="welcome-tag">УРА! ТЫ СПРАВИЛСЯ! 🎉</span><h1>'+(all?'Ты открыл все буквы!':'Ты познакомился с буквой '+completed.name+'!')+'</h1><p>'+(all?'Весь алфавит собран! Али приготовил для тебя новые игры.':'Буква '+completed.ch+' теперь в твоей коллекции. Али гордится тобой!')+'</p><div class="earned-letter-row"><span class="arabic" lang="ar" dir="rtl">'+completed.ch+'</span><span><b>'+completed.name+'</b><small>Новая буква в коллекции</small></span><span class="earned-check">✓</span></div><button class="btn btn-primary kid-main-cta" data-action="next-letter">'+(all?'Посмотреть карту':'Вперёд, к следующей букве!')+' <span>→</span></button><button class="celebration-secondary" data-route="path">Посмотреть карту приключений</button></div></section>';
 }
-const VOWELS=[
- {id:'fatha',name:'Фатха',mark:'َ',sound:'а',sample:'بَ',place:'Сверху буквы',desc:'Короткий звук «а». Маленькая наклонная черта стоит над буквой.',color:'#fff0d6',example:'بَ'},
- {id:'kasra',name:'Касра',mark:'ِ',sound:'и',sample:'بِ',place:'Под буквой',desc:'Короткий звук «и». Маленькая наклонная черта стоит под буквой.',color:'#e5f4ff',example:'بِ'},
- {id:'damma',name:'Дамма',mark:'ُ',sound:'у',sample:'بُ',place:'Сверху буквы',desc:'Короткий звук «у». Маленький завиток стоит над буквой.',color:'#e2f8ed',example:'بُ'}
-];
 function renderReading(){
  const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
  const cards=VOWELS.map(function(x,j){return '<button class="vowel-card '+(j===i?'selected':'')+'" data-action="reading-pick" data-i="'+j+'"><span class="vowel-ar arabic" lang="ar" dir="rtl">ب'+x.mark+'</span><strong>'+x.name+'</strong><small>Звук «'+x.sound+'»</small></button>';}).join('');
@@ -379,10 +371,10 @@ function showModal(title,body,buttons){
 function closeModal(){const root=document.getElementById('modal-root');if(root)root.innerHTML='';}
 function finishLetter(){
   if(!state.writeReady){toast('Сначала обведи букву — это последний шаг урока!');return;}
-  const i=state.letter;state.justCompleted=i;
+  const i=state.letter,starsBefore=state.stars;state.justCompleted=i;
   if(state.learned.indexOf(i)<0){state.learned.push(i);state.learned.sort(function(a,b){return a-b;});addXP(20);}
   else{addXP(5);}
-  markMission('lesson');state.lessonStep=0;state.writeReady=false;quizFeedback='';route('celebration');
+  markMission('lesson');state.lastLessonStars=Math.max(1,state.stars-starsBefore);state.lessonStep=0;state.writeReady=false;quizFeedback='';route('celebration');
 }
 function answerLetter(i){
   const target=state.letter,fb=document.getElementById('lesson-feedback');
@@ -430,12 +422,13 @@ function pickMemory(i){
 }
 function handleAction(action,el){
   const i=Number(el.dataset.i);
-  if(action==='continue'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;}
+  if(action==='continue'){if(state.learned.length>=28){route('path');return;}state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;}
+  if(action==='home-world'){const world=el.dataset.world;if(!canVisit(world)){route(world);return;}if(world==='letters'){if(state.learned.length>=28){route('letters');return;}state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;route('lesson');return;}route(world);return;}
   if(action==='open-reading'){state.readingIndex=0;route('reading');return;}
   if(action==='reading-pick'){state.readingIndex=Number(el.dataset.i)||0;state.readingAnswer='';render();return;}
   if(action==='reading-speak'){const v=VOWELS[Number(el.dataset.i)];if(v)speak(v.sample);return;}
   if(action==='reading-answer'){answerReading(el.dataset.answer);return;}
-  if(action==='reading-next'){if(Number(state.readingIndex)>=2){state.readingIndex=0;state.readingAnswer='';addXP(10);toast('Этап чтения завершён! +10 XP ✨');route('path');return;}state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
+  if(action==='reading-next'){if(Number(state.readingIndex)>=2){state.readingIndex=0;state.readingAnswer='';state.readingCompleted=true;addXP(10);toast('Этап чтения завершён! +10 XP ✨');route('path');return;}state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
   if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
   if(action==='open-letter'){
     if(!isUnlocked(i)){toast('Сначала закончи предыдущий урок — и эта буква откроется! 🔒');return;}
@@ -477,6 +470,7 @@ function handleAction(action,el){
   }
   if(action==='memory-pick'){pickMemory(Number(el.dataset.card));return;}
   if(action==='sound-toggle'){toggleSound();return;}
+  if(action==='about'){about();return;}
   if(action==='reset-progress'){showModal('Начать заново?','Все выученные буквы, XP и награды на этом устройстве будут сброшены. Это нельзя отменить.','<button class="btn btn-ghost" data-action="close-modal">Оставить</button><button class="btn btn-primary" data-action="confirm-reset">Сбросить прогресс</button>');return;}
   if(action==='close-modal'){closeModal();return;}
   if(action==='confirm-reset'){const old=state;state=freshState();state.lastVisit=old.lastVisit;state.streak=old.streak;visitToday();state.game=null;closeModal();route('home');toast('Начинаем новое приключение!');return;}
@@ -488,7 +482,7 @@ function toggleSound(){
   toast(off?'Звук включён':'Звук выключен');if(off)speak('مرحبا');
 }
 function about(){
-  showModal('Для родителей','Это игровое знакомство с арабским алфавитом для русскоязычных детей. Задания короткие, прогресс сохраняется только в этом браузере. Нажатие на 🔊 использует голос, доступный на устройстве. Русская транскрипция является только приблизительной подсказкой. Для точного произношения полезно заниматься с преподавателем арабского языка.','<button class="btn btn-primary" data-action="close-modal">Понятно</button>');
+  showModal('Для родителей','Ребёнок идёт небольшими шагами: знакомится с формой буквы, узнаёт её звук, находит такую же букву, пробует писать и получает награду за завершение. После нескольких букв открывается практика коротких гласных, затем словарь, фразы и игры. Это развивающий прототип, а не официально аккредитованный курс: арабские примеры, произношение и возрастную пригодность необходимо проверить с преподавателем арабского для детей. Прогресс хранится только в этом браузере.','<button class="btn btn-primary" data-action="close-modal">Понятно</button>');
 }
 document.addEventListener('click',function(e){
   const routeEl=e.target.closest('[data-route]');if(routeEl){e.preventDefault();route(routeEl.dataset.route);return;}
@@ -503,7 +497,7 @@ visitToday();
 // A lesson can be resumed from the home CTA; stale #lesson links never bypass onboarding.
 const allowedViews=['home','path','letters','words','phrases','games','profile','reading'];
 const requestedView=(location.hash||'').slice(1);
-if(allowedViews.indexOf(requestedView)>=0)state.view=requestedView;
+if(allowedViews.indexOf(requestedView)>=0&&canVisit(requestedView))state.view=requestedView;
 else{
   state.view='home';
   try{history.replaceState(null,'',location.pathname+location.search+'#home');}catch(e){}
