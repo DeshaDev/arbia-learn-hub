@@ -1,0 +1,22 @@
+name: Validate Russian Arabic Kids app
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - arabic-kids-russian
+    paths:
+      - 'kids-arabic-russian/**'
+      - '.github/workflows/validate-kids-arabic-app.yml'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check kids-arabic-russian/app.js
+      - name: Check Arabic lesson data
+        run: node kids-arabic-russian/tests/data-check.mjs
