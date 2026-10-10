@@ -217,14 +217,14 @@ main{width:min(1320px,calc(100% - 48px));margin:0 auto;min-height:650px}.boot-sc
 @media(max-width:390px){.brand-label strong{font-size:10px}.brand-label small{font-size:8px}.brand-symbol{width:34px;height:34px}.xp-chip{gap:4px;padding:7px}.home-world{grid-template-columns:30px 1fr}.home-world-icon{width:30px;height:30px}.scene-discover .lesson-character{width:115px;left:1%}.scene-discover .lesson-letter{right:5%;width:84px;height:91px}.kid-answer{min-height:58px}.kid-answer .arabic{font-size:30px}}
 
 /* The mascot physically hops toward the discovery card. */
-.scene-discover .lesson-character.walk{--rabbit-travel:clamp(160px,38vw,430px);animation:rabbit-hops-to-letter 1.18s cubic-bezier(.2,.8,.2,1) forwards;transform:none}
+.scene-discover .lesson-character.walk{animation:rabbit-hops-to-letter 1.18s cubic-bezier(.2,.8,.2,1) forwards;transform:none}
 @keyframes rabbit-hops-to-letter{
   0%{transform:translateX(0) translateY(0) rotate(0)}
-  18%{transform:translateX(calc(var(--rabbit-travel)*.18)) translateY(-18px) rotate(5deg)}
-  42%{transform:translateX(calc(var(--rabbit-travel)*.43)) translateY(0) rotate(-4deg)}
-  67%{transform:translateX(calc(var(--rabbit-travel)*.72)) translateY(-13px) rotate(3deg)}
-  86%{transform:translateX(var(--rabbit-travel)) translateY(1px) rotate(-2deg)}
-  100%{transform:translateX(var(--rabbit-travel)) translateY(0) rotate(0)}
+  18%{transform:translateX(75px) translateY(-18px) rotate(5deg)}
+  42%{transform:translateX(180px) translateY(0) rotate(-4deg)}
+  67%{transform:translateX(300px) translateY(-13px) rotate(3deg)}
+  86%{transform:translateX(400px) translateY(1px) rotate(-2deg)}
+  100%{transform:translateX(430px) translateY(0) rotate(0)}
 }
 .kid-celebration{max-width:800px;margin:26px auto 46px;background:#fff;border:3px solid #fff;border-radius:32px;overflow:hidden;box-shadow:0 18px 50px #392b6714}
 .celebration-sky{position:relative;min-height:285px;isolation:isolate;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(180deg,#c8edff,#f0f9ff 55%,#cef1d7 55%,#9bdeb3)}
@@ -244,5 +244,5 @@ main{width:min(1320px,calc(100% - 48px));margin:0 auto;min-height:650px}.boot-sc
 .earned-letter-row b{font-size:13px}.earned-letter-row small{font-size:9px;color:#968bb7}
 .earned-check{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#36c18c;color:#fff;font-size:15px}
 .celebration-secondary{margin-top:13px;background:transparent;border:0;color:#82779f;text-decoration:underline;text-underline-offset:4px;font-size:10px;font-weight:1000}
-@media(max-width:1000px){.scene-discover .lesson-character.walk{--rabbit-travel:clamp(130px,36vw,310px)}}
-@media(max-width:700px){.scene-discover .lesson-character.walk{--rabbit-travel:clamp(75px,32vw,150px)}.celebration-sky{min-height:210px}.celebration-rabbit{width:145px;height:190px}.celebration-sticker{width:57px;height:57px;border-radius:18px;font-size:24px;right:9%;bottom:29px}.celebration-cloud{font-size:38px}.kid-celebration-copy{padding:20px 14px 23px}.kid-celebration-copy h1{font-size:28px}.kid-celebration-copy>p{font-size:10px}.kid-celebration-copy .kid-main-cta{width:min(100%,320px);min-width:0}}
+@media(max-width:1000px){@keyframes rabbit-hops-to-letter{0%{transform:translateX(0) translateY(0)}20%{transform:translateX(45px) translateY(-15px) rotate(5deg)}45%{transform:translateX(125px) translateY(0) rotate(-4deg)}72%{transform:translateX(220px) translateY(-11px) rotate(3deg)}100%{transform:translateX(300px) translateY(0) rotate(0)}}}
+@media(max-width:700px){@keyframes rabbit-hops-to-letter{0%{transform:translateX(0) translateY(0)}20%{transform:translateX(22px) translateY(-12px) rotate(5deg)}45%{transform:translateX(60px) translateY(0) rotate(-4deg)}72%{transform:translateX(105px) translateY(-9px) rotate(3deg)}100%{transform:translateX(145px) translateY(0) rotate(0)}}.celebration-sky{min-height:210px}.celebration-rabbit{width:145px;height:190px}.celebration-sticker{width:57px;height:57px;border-radius:18px;font-size:24px;right:9%;bottom:29px}.celebration-cloud{font-size:38px}.kid-celebration-copy{padding:20px 14px 23px}.kid-celebration-copy h1{font-size:28px}.kid-celebration-copy>p{font-size:10px}.kid-celebration-copy .kid-main-cta{width:min(100%,320px);min-width:0}}
