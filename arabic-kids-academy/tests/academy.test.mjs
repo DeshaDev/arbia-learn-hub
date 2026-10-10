@@ -24,6 +24,7 @@ assert.ok(js.includes("const CURRICULUM=["), "an explicit outcomes-based learnin
 assert.ok(js.includes("stale #lesson links never bypass onboarding"), "cold page loads should not open halfway through a lesson");
 assert.ok(js.includes("if(!state.writeReady)"), "a lesson cannot be completed without practising writing");
 assert.ok(js.includes("state.readingAnswer===v.sound"), "vowel practice should require a correct answer before advancing");
+assert.ok(js.includes('<span class="lesson-object" aria-hidden="true">✦</span>'), "the scene should not place a misleading example emoji in the sky");
 assert.ok(rabbit.includes("@keyframes") && rabbit.includes("Али"), "animated mascot must exist");
 assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes("@keyframes rabbitWalk"), "lesson and world scene styles must exist");
 assert.ok(css.includes("@media(max-width:620px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
