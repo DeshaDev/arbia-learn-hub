@@ -3,7 +3,7 @@ import vm from "node:vm";
 import assert from "node:assert/strict";
 
 const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
-const store = new Map([["ali-academy-progress-v2", JSON.stringify({learned:[0],xp:35,letter:1,view:"lesson"})]]);
+const store = new Map([["ali-academy-progress-v2", JSON.stringify({learned:[0],xp:35,letter:1,view:"lesson"})],["ali-academy-progress-v3", JSON.stringify({learned:[0,1],xp:85,letter:2,view:"lesson"})]]);
 const ctx2d = { scale(){}, clearRect(){}, beginPath(){}, moveTo(){}, lineTo(){}, stroke(){} };
 const elements = new Map();
 function makeElement(id) {
