@@ -93,7 +93,7 @@ const BADGES = [
  {id:'streak3',icon:'🔥',title:'Привычка растёт',desc:'Занимайся 3 дня подряд',ok:s=>s.streak>=3}
 ];
 const STORE_KEY = 'ali-academy-progress-v2';
-function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false,writeReady:false,readingIndex:0,readingAnswer:''};}
+function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false,writeReady:false,readingIndex:0,readingAnswer:'',readingCompleted:false};}
 function loadState(){
   try{
     const raw=JSON.parse(localStorage.getItem(STORE_KEY)||'null');
@@ -127,9 +127,8 @@ function randomItems(arr,n,exclude){const pool=arr.filter(x=>exclude===undefined
 function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function rabbit(){return '<img class="heading-mascot" src="./assets/rabbit.svg" alt="Али, зайчик-путешественник">';}
 function updateHeader(){
-  const xp=document.getElementById('xp-count'),st=document.getElementById('streak-count');
-  if(xp)xp.textContent=state.xp;
-  if(st)st.textContent=state.streak||1;
+  const xp=document.getElementById('xp-count');
+  if(xp)xp.textContent=state.stars;
   document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===state.view||((state.view==='lesson'||state.view==='celebration')&&b.dataset.route==='letters')||(state.view==='profile'&&b.dataset.route==='profile')||(state.view==='phrases'&&b.dataset.route==='words'||state.view==='reading'&&b.dataset.route==='reading'));});
 }
 function canVisit(view){
@@ -423,7 +422,7 @@ function handleAction(action,el){
   if(action==='reading-pick'){state.readingIndex=Number(el.dataset.i)||0;state.readingAnswer='';render();return;}
   if(action==='reading-speak'){const v=VOWELS[Number(el.dataset.i)];if(v)speak(v.sample);return;}
   if(action==='reading-answer'){answerReading(el.dataset.answer);return;}
-  if(action==='reading-next'){if(Number(state.readingIndex)>=2){state.readingIndex=0;state.readingAnswer='';addXP(10);toast('Этап чтения завершён! +10 XP ✨');route('path');return;}state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
+  if(action==='reading-next'){if(Number(state.readingIndex)>=2){state.readingIndex=0;state.readingAnswer='';state.readingCompleted=true;addXP(10);toast('Этап чтения завершён! +10 XP ✨');route('path');return;}state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
   if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
   if(action==='open-letter'){
     if(!isUnlocked(i)){toast('Сначала закончи предыдущий урок — и эта буква откроется! 🔒');return;}
@@ -465,6 +464,7 @@ function handleAction(action,el){
   }
   if(action==='memory-pick'){pickMemory(Number(el.dataset.card));return;}
   if(action==='sound-toggle'){toggleSound();return;}
+  if(action==='about'){about();return;}
   if(action==='reset-progress'){showModal('Начать заново?','Все выученные буквы, XP и награды на этом устройстве будут сброшены. Это нельзя отменить.','<button class="btn btn-ghost" data-action="close-modal">Оставить</button><button class="btn btn-primary" data-action="confirm-reset">Сбросить прогресс</button>');return;}
   if(action==='close-modal'){closeModal();return;}
   if(action==='confirm-reset'){const old=state;state=freshState();state.lastVisit=old.lastVisit;state.streak=old.streak;visitToday();state.game=null;closeModal();route('home');toast('Начинаем новое приключение!');return;}
@@ -491,7 +491,7 @@ visitToday();
 // A lesson can be resumed from the home CTA; stale #lesson links never bypass onboarding.
 const allowedViews=['home','path','letters','words','phrases','games','profile','reading'];
 const requestedView=(location.hash||'').slice(1);
-if(allowedViews.indexOf(requestedView)>=0)state.view=requestedView;
+if(allowedViews.indexOf(requestedView)>=0&&canVisit(requestedView))state.view=requestedView;
 else{
   state.view='home';
   try{history.replaceState(null,'',location.pathname+location.search+'#home');}catch(e){}
