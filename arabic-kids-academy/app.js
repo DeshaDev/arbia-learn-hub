@@ -153,7 +153,7 @@ function speak(text){
 }
 function markMission(id){
   if(state.missionDate!==todayKey()){state.missionDate=todayKey();state.missions={lesson:false,game:false,listen:false};}
-  if(!state.missions[id]){state.missions[id]=true;saveState();}
+  if(!state.missions[id]){state.missions[id]=true;const bonus={lesson:15,game:10,listen:5}[id]||0;state.xp+=bonus;state.stars+=1;saveState();toast('Миссия выполнена! +'+bonus+' XP ✨');}
 }
 function addXP(n){state.xp+=n;state.stars+=Math.max(1,Math.round(n/10));saveState();}
 function currentLetter(){return LETTERS[state.letter]||LETTERS[0];}
@@ -415,7 +415,7 @@ function handleAction(action,el){
   }
   if(action==='lesson-answer'){answerLetter(i);return;}
   if(action==='skip-to-write'){state.lessonStep=3;render();return;}
-  if(action==='speak-letter'){speak(currentLetter().ch);markMission('listen');return;}
+  if(action==='speak-letter'){speak(currentLetter().ch);return;}
   if(action==='speak-word'){speak(letterWord(currentLetter()).ar);state.wordsHeard++;markMission('listen');return;}
   if(action==='clear-canvas'){clearCanvas();return;}
   if(action==='complete-lesson'){finishLetter();return;}
