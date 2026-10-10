@@ -33,4 +33,4 @@ python -m http.server 8000
 
 ## Публикация этой папки через GitHub Pages
 
-Сначала откройте **Settings → Pages** в репозитории и выберите **GitHub Actions** как источник публикации. Подключённый GitHub Actions token не смог включить Pages автоматически, поэтому это одноразовое действие нужно выполнить вручную. Затем повторите запуск workflow `.github/workflows/deploy-kids-arabic-pages.yml` во вкладке **Actions** или отправьте новый commit в ветку `arabic-kids-russian`. Workflow проверяет синтаксис JavaScript и данные букв, затем публикует папку `kids-arabic-russian`.
+Сначала откройте **Settings → Pages** в репозитории и выберите **GitHub Actions** как источник публикации. Подключённый GitHub Actions token не смог включить Pages автоматически, поэтому это одноразовое действие нужно выполнить вручную. Затем откройте последний неудачный запуск в **Actions** и нажмите **Re-run jobs**. Альтернативно отправьте новый commit в ветку `arabic-kids-russian`. Workflow проверяет синтаксис JavaScript и данные букв, затем публикует папку `kids-arabic-russian`.
