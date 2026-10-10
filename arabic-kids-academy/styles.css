@@ -135,3 +135,110 @@
  .game-stage{margin:10px auto 23px}.game-stage-top{gap:5px;margin-bottom:8px}.game-stage-top .back-home{font-size:7px;padding:6px 8px}.game-round-count{font-size:7px}.game-star-score{font-size:8px;padding:5px 7px}.game-level-heading h1{font-size:23px}.game-level-heading p{font-size:8px}.game-level-track{margin-top:8px}.game-level-track span{width:20px;height:20px;font-size:7px}.game-challenge-panel{padding:10px;border-radius:19px}.game-challenge-visual{min-height:115px;padding:8px;gap:8px;border-radius:15px}.game-challenge-picture{width:99px;height:103px;border-radius:19px}.game-target-copy{margin:7px auto}.game-target-copy strong{font-size:10px}.game-target-copy small{font-size:7px}.game-audio-button{margin:2px auto 8px;padding:6px 11px;font-size:8px}.game-audio-button>span{width:22px;height:22px}.letter-jump-grid{gap:6px;margin:10px auto 5px}.letter-jump{min-height:71px;padding:6px 2px;border-radius:14px;box-shadow:0 4px 0 #badcf0}.letter-jump .arabic{font-size:34px}.letter-jump small{font-size:7px}.mail-challenge{gap:6px}.mail-target-letter{width:72px;height:85px;border-radius:15px}.mail-target-letter .arabic{font-size:43px}.mailbox-art{width:98px;height:98px}.picture-choice-grid{gap:5px;margin:9px auto 4px}.picture-choice{min-height:100px;padding:6px 3px;gap:3px;border-radius:13px;box-shadow:0 3px 0 #e2daf4}.picture-choice-art{width:57px;height:55px}.picture-choice strong{font-size:8px}.picture-choice .arabic{font-size:17px}.listen-cloud-stage{width:103px;height:86px}.listen-main-art{width:81px;height:81px}.listen-wave{width:72px;height:72px}.answer-feedback{font-size:8px;padding:8px;margin:9px auto 7px}.game-main-action{min-width:145px;padding:10px 13px;font-size:9px}.game-finished{padding:19px 11px;border-radius:21px}.game-finish-art{width:103px;height:100px}.game-finished h1{font-size:23px}.game-finished p{font-size:8px}.finish-stars{font-size:17px}.game-stage-memory{max-width:400px}.memory-intro h1{font-size:21px}.memory-intro p{font-size:8px}.memory-board{gap:5px;margin:10px auto}.memory-card{border-radius:12px;box-shadow:0 4px 0 #d6caf5}.memory-letter{font-size:32px}.memory-card small{font-size:6px}
  .letter-discovery{max-width:460px;padding:11px;border-radius:21px}.discovery-showcase{gap:7px;margin:8px 0}.discovery-object,.discovery-letter-panel{min-height:175px;padding:7px 4px 15px;border-radius:18px}.discovery-object .friend-art{height:135px;width:100%;max-width:155px}.object-halo{width:82px;height:82px;top:29px}.object-tap-hint{font-size:6px;bottom:7px}.discovery-letter-panel .eyebrow{font-size:6px}.discovery-letter{height:84px;font-size:clamp(63px,18vw,84px);margin:1px 0}.discovery-letter-panel h1{font-size:17px}.letter-sound-line{font-size:8px;margin-top:3px}.letter-checks{gap:3px;margin-top:7px}.letter-checks span{font-size:6px;padding:4px 5px}.discovery-word-caption{padding:6px 9px;margin-bottom:7px}.discovery-word-caption .arabic{font-size:21px}.discovery-word-caption strong{font-size:9px}.discovery-word-caption small{font-size:7px}.discovery-hint{padding:5px 7px;gap:6px}.discovery-hint img{width:31px;height:35px}.discovery-hint p{font-size:7px}.repeat-challenge{grid-template-columns:24px minmax(0,1fr);gap:6px;padding:7px;margin-top:7px}.repeat-step{width:23px;height:23px;font-size:8px}.repeat-challenge b{font-size:8px}.repeat-challenge small{font-size:7px}.repeat-challenge .btn{grid-column:2;justify-self:start;padding:6px 8px;font-size:7px}.discovery-showcase .discovery-letter-panel h1{font-size:17px}.quiz-mascot{min-height:63px}.quiz-friend-art{width:60px;height:59px}.quiz-mascot img{width:43px;height:57px}.quiz-reference>.arabic{font-size:36px}.quiz-reference{gap:6px;padding:6px;margin:8px auto}.quiz-reference b{font-size:9px}.quiz-reference small{font-size:7px}.kid-answer-grid{gap:5px}.kid-answer{min-height:56px;border-radius:12px}.kid-answer .arabic{font-size:29px}.kid-answer small{font-size:6px}
 }
+
+/* Mobile legibility: the letter is the lesson focus, not a tiny badge. */
+@media(max-width:680px){
+ .discovery-showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:9px 0}
+ .discovery-object,.discovery-letter-panel{min-height:174px;border-radius:18px}
+ .discovery-object{height:auto;margin:0;padding:7px 5px 22px}
+ .discovery-object .friend-art{width:100%;height:126px}
+ .object-halo{width:88px;height:88px;top:22px;box-shadow:0 0 0 6px #fff5}
+ .object-tap-hint{font-size:9px;bottom:8px}
+ .discovery-letter-panel{padding:8px 5px 10px}
+ .discovery-letter{width:100%;height:112px;margin:1px 0;font-size:clamp(72px,17vw,92px);line-height:1}
+ .discovery-letter-panel .eyebrow{font-size:8px}
+ .discovery-letter-panel h1{font-size:18px}
+ .letter-sound-line{font-size:12px}
+ .letter-checks{gap:4px;margin-top:7px}
+ .letter-checks span{padding:4px 6px;font-size:9px}
+ .discovery-word-caption{gap:11px;margin-bottom:8px;padding:8px 10px}
+ .discovery-word-caption .arabic{font-size:27px}
+ .discovery-word-caption strong{font-size:13px}
+ .discovery-word-caption small{font-size:10px}
+ .discovery-hint p{font-size:10px}
+ .discovery-hint p b{font-size:11px}
+ .repeat-challenge b{font-size:11px}
+ .repeat-challenge small{font-size:9px}
+ .games-world-grid{grid-template-columns:minmax(0,1fr);gap:9px}
+ .game-card{grid-template-columns:96px minmax(0,1fr);min-height:126px;padding:10px}
+ .game-art{width:92px;height:103px}
+ .game-card-copy strong{font-size:13px}
+ .game-card-copy small{font-size:10px;line-height:1.5}
+ .game-card-copy em{font-size:10px}
+ .game-challenge-panel{padding:10px;border-radius:19px}
+ .game-challenge-visual{flex-wrap:wrap;gap:9px;min-height:145px;padding:9px}
+ .game-challenge-picture{width:108px;height:108px;border-radius:20px}
+ .game-target-copy{max-width:100%;gap:4px}
+ .game-target-copy strong{font-size:14px}
+ .game-target-copy small{font-size:10px;line-height:1.5}
+ .letter-jump-grid{gap:7px;margin-top:12px}
+ .letter-jump{min-height:87px;border-radius:15px}
+ .letter-jump .arabic{font-size:35px}
+ .letter-jump small{font-size:9px}
+ .picture-choice-grid{gap:6px;margin-top:9px}
+ .picture-choice{min-height:110px;padding:7px 4px;border-radius:14px}
+ .picture-choice-art{width:67px;height:67px}
+ .picture-choice strong{font-size:10px}
+ .picture-choice .arabic{font-size:20px}
+ .mail-challenge{gap:8px}
+ .mail-target-letter{width:83px;height:95px;border-radius:16px}
+ .mail-target-letter .arabic{font-size:47px}
+ .mailbox-dropzone{width:118px;min-height:111px;border-radius:17px}
+ .mailbox-dropzone .mailbox-art{width:90px;height:88px}
+ .mailbox-dropzone small{font-size:9px}
+ .mail-parcel:after{font-size:7px}
+ .mail-delivery-controls{padding-top:2px}
+ .mail-delivery-controls .game-feedback-line{font-size:10px}
+ .mail-deliver{width:100%;min-height:43px;font-size:12px}
+ .answer-feedback{font-size:11px;line-height:1.5}
+ .game-main-action{min-width:0;min-height:42px;font-size:11px}
+ .memory-intro h1{font-size:24px}
+ .memory-intro p{font-size:10px;line-height:1.5}
+ .memory-board{gap:7px}
+ .memory-card{border-radius:12px}
+ .memory-letter{font-size:34px}
+ .memory-friend-svg{width:62px;height:60px}
+ .memory-card small{font-size:9px}
+}
+@media(max-width:375px){
+ .discovery-showcase{gap:6px}
+ .discovery-object,.discovery-letter-panel{min-height:160px}
+ .discovery-object .friend-art{height:112px}
+ .discovery-letter{height:100px;font-size:clamp(65px,19vw,78px)}
+ .discovery-letter-panel h1{font-size:16px}
+ .letter-checks span{font-size:8px;padding:4px}
+ .games-hub{margin-top:10px}
+ .game-card{grid-template-columns:83px minmax(0,1fr);min-height:112px}
+ .game-art{width:80px;height:91px}
+ .game-card-copy strong{font-size:12px}
+ .game-card-copy small{font-size:9px}
+ .game-challenge-picture{width:96px;height:96px}
+ .picture-choice{min-height:97px}
+ .picture-choice-art{width:55px;height:55px}
+}
+/* The games are distinct, tactile SVG scenes, not just static answer cards. */
+.hop-challenge-illustration{position:relative;display:grid;place-items:center;width:155px;min-height:139px;flex:0 0 155px;border-radius:23px;background:linear-gradient(145deg,#ddf6ff,#f2edff);overflow:hidden}
+.hop-challenge-illustration:after{content:"";position:absolute;left:-5%;right:-5%;bottom:-18px;height:42px;border-radius:50%;background:#bfe7cb}
+.hop-challenge-illustration .game-challenge-picture{position:relative;z-index:1;width:112px;height:112px;border:0;background:#ffffffc9;box-shadow:0 5px 0 #d9cdf45c}
+.game-river-rabbit{position:absolute;z-index:2;left:4px;bottom:1px;width:54px;height:67px;object-fit:contain;filter:drop-shadow(0 4px 2px #37445b1a);animation:rabbit-idle 1.6s ease-in-out infinite}
+.letter-jump:disabled{opacity:.48;filter:saturate(.62);cursor:not-allowed;transform:none}
+.letter-jump.is-correct{animation:stone-land .42s ease-out;z-index:1}
+@keyframes stone-land{0%{transform:translateY(0)}45%{transform:translateY(-10px) scale(1.07)}100%{transform:translateY(0) scale(1)}}
+.game-stage-catch .game-challenge-visual{gap:11px}
+.mail-challenge.has-selection .mail-target-letter{border-color:#a9dfc2;box-shadow:0 6px 0 #b8e6cf}
+.mailbox-dropzone{display:flex;flex-direction:column;align-items:center;justify-content:center;width:145px;min-height:133px;border:2px dashed #b5a5ed;border-radius:22px;background:#f6f1ff;transition:background .18s,border .18s,transform .18s}
+.mailbox-dropzone .mailbox-art{width:110px;height:104px;filter:drop-shadow(0 5px 4px #56417a12)}
+.mailbox-dropzone small{font-size:8px;font-weight:1000;color:#7865c3}
+.mailbox-dropzone.ready{border-style:solid;background:#e5faee;border-color:#8bd7b1;transform:translateY(-2px)}
+.mail-parcel{position:relative;border-style:dashed}
+.mail-parcel:after{content:"ПОСЫЛКА";position:absolute;top:5px;right:7px;padding:3px 5px;border-radius:5px;background:#fff;border:1px solid #ece6fb;color:#8274a7;font-size:6px;font-weight:1000;letter-spacing:.5px}
+.mail-parcel.is-selected{border-color:#8d74e6;outline:3px solid #ece6ff;transform:translateY(-4px) rotate(-1deg);box-shadow:0 8px 0 #c9bbf2}
+.mail-parcel.is-correct{border-style:solid;border-color:#70d9aa;background:#e0f9ea}
+.mail-delivery-controls{max-width:510px;margin:7px auto 0}
+.mail-deliver:disabled{opacity:.42;filter:grayscale(.2);cursor:not-allowed}
+.mail-deliver:not(:disabled){box-shadow:0 5px 0 #b6a5ed;animation:deliver-ready .9s ease-in-out infinite alternate}
+@keyframes deliver-ready{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+.game-stage .game-feedback-line{font-size:10px;line-height:1.55}
+.game-stage .game-level-heading p{font-size:12px;line-height:1.55}
+.game-stage .game-round-count{font-size:10px}
+.game-stage .game-star-score{font-size:11px}

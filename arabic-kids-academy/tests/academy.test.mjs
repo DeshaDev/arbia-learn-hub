@@ -48,9 +48,12 @@ assert.ok(js.includes("discovery-showcase") && js.includes("discovery-letter ara
 assert.ok(js.includes("state.lessonChecks") && js.includes("data-action=\"i-repeated\""), "the child must listen to both items and confirm repeating before continuing");
 assert.ok(js.includes("game-challenge-panel") && js.includes("data-action=\"game-next\""), "game rounds must have deliberate feedback and manual progression");
 assert.ok(js.includes("id:'catch',art:'hop-game'") && js.includes("id:'mail',art:'mail-game'") && js.includes("id:'memory',art:'memory-game'") && js.includes("id:'listen',art:'listen-game'"), "each game should have its own SVG mechanic");
-for (const id of ["lion","duck","apple","fox","camel","horse","sheep","bear","corn","pomegranate","giraffe","fish","sun","eagle","frog","airplane","envelope","eye","cloud","elephant","moon","book","lemon","banana","bee","crescent","rose","hand","water","door","house","heart","hop-game","mail-game","memory-game","listen-game"]) {
+for (const id of ["lion","duck","apple","fox","camel","horse","sheep","bear","corn","pomegranate","giraffe","fish","sun","eagle","frog","airplane","envelope","eye","cloud","elephant","moon","book","lemon","banana","bee","crescent","rose","hand","water","door","house","heart","hop-game","mail-game","memory-game","listen-game","mailbox"]) {
   assert.ok(friends.includes('<symbol id="'+id+'"'), "missing custom SVG symbol: " + id);
 }
 assert.ok(css.includes(".discovery-showcase") && css.includes(".games-world-grid") && css.includes(".letter-jump-grid") && css.includes(".picture-choice-grid"), "SVG discovery and bespoke game layouts must be styled");
+assert.ok(css.includes(".discovery-letter{width:100%;height:112px") && css.includes(".discovery-letter{height:100px;font-size:clamp(65px,19vw,78px)"), "mobile overrides must preserve a large Arabic letter beside its SVG object");
+assert.ok(js.includes('data-action="mail-select"') && js.includes('data-action="mail-deliver"'), "the mail game must have a two-step select-and-deliver interaction");
+assert.ok(js.includes("g.answered||!g.heard"), "sound games must require audio before answering");
 
 console.log("PASS: 28 letters, 8 learning views, 4 game modes, sound, tracing, save-state, animated rabbit, responsive design.");

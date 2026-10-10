@@ -103,12 +103,15 @@ for (const kind of ["catch","mail","listen"]) {
   assert.equal(vm.runInContext("state.game.kind",context),kind,"game should start: "+kind);
   assert.match(app.innerHTML,/game-challenge-panel/,kind+" should render its own challenge scene");
   assert.match(app.innerHTML,/letter-friends\.svg#/,kind+" should use original SVG illustrations");
+  vm.runInContext("handleAction('game-speak',{dataset:{}})",context);
+  const pick=vm.runInContext("WORDS.indexOf(WORDS.find(w=>w.idx===state.game.target))",context);
   if(kind==="catch") {
-    vm.runInContext("handleAction('game-speak',{dataset:{}})",context);
     vm.runInContext("handleAction('game-answer',{dataset:{i:String(state.game.target)}})",context);
+  } else if(kind==="mail") {
+    vm.runInContext("handleAction('mail-select',{dataset:{word:String("+pick+")}})",context);
+    assert.equal(vm.runInContext("state.game.selectedWord",context),pick,"mail should select a parcel before delivering it");
+    vm.runInContext("handleAction('mail-deliver',{dataset:{}})",context);
   } else {
-    vm.runInContext("handleAction('game-speak',{dataset:{}})",context);
-    const pick=vm.runInContext("WORDS.indexOf(WORDS.find(w=>w.idx===state.game.target))",context);
     vm.runInContext("handleAction('game-answer-word',{dataset:{word:String("+pick+")}})",context);
   }
   assert.equal(vm.runInContext("state.game.answered",context),true,kind+" should provide explicit feedback after an answer");
@@ -117,6 +120,14 @@ for (const kind of ["catch","mail","listen"]) {
   vm.runInContext("handleAction('game-next',{dataset:{}})",context);
   assert.equal(vm.runInContext("state.game.round",context),1,kind+" should move only after the child presses next");
 }
+vm.runInContext("state.game=null;handleAction('start-game',{dataset:{game:'mail'}})",context);
+const wrongParcel=vm.runInContext("WORDS.indexOf(WORDS.find(w=>w.idx!==state.game.target))",context);
+vm.runInContext("handleAction('mail-select',{dataset:{word:String("+wrongParcel+")}})",context);
+vm.runInContext("handleAction('mail-deliver',{dataset:{}})",context);
+assert.equal(vm.runInContext("state.game.answered",context),false,"a wrong parcel should invite a retry rather than fail the entire round");
+assert.equal(vm.runInContext("state.game.selectedWord",context),null,"a wrong parcel should return to the selection shelf");
+assert.ok(vm.runInContext("state.game.mailFeedback.length>0",context),"mail should give a child-friendly retry hint");
+
 vm.runInContext("state.game=null;handleAction('start-game',{dataset:{game:'memory'}})",context);
 assert.equal(vm.runInContext("state.game.deck.length",context),8,"memory game should create four SVG-letter pairs");
 const pair=vm.runInContext("state.game.deck[0].pair",context);
