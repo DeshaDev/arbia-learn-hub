@@ -6,7 +6,7 @@ const js = readFileSync(new URL("app.js", root), "utf8");
 const css = readFileSync(new URL("styles.css", root), "utf8");
 const rabbit = readFileSync(new URL("assets/rabbit.svg", root), "utf8");
 assert.equal((js.match(/^\s*\{ch:'/gm) || []).length, 28, "28 letter entries must exist");
-for (const name of ["renderHome", "renderPath", "renderLetters", "renderLesson", "renderWords", "renderPhrases", "renderGames", "renderProfile", "renderCelebration"]) {
+for (const name of ["renderHome", "renderPath", "renderLetters", "renderLesson", "renderWords", "renderPhrases", "renderGames", "renderProfile", "renderCelebration", "renderReading"]) {
   assert.ok(js.includes("function " + name + "("), "missing academy view: " + name);
 }
 for (const name of ["meet-letter", "complete-lesson", "next-letter", "wireCanvas", "pickMemory", "advanceGame", "markMission", "saveState"]) {
@@ -17,9 +17,13 @@ for (const game of ["catch", "mail", "memory", "listen"]) {
 }
 assert.ok(!/\bl\.i\b|\bx\.i\b/.test(js), "letter indices must use array positions, not missing .i fields");
 assert.ok(js.includes("LETTERS.map(function(l,i){return i;})"), "game targets must use valid letter indices");
-assert.ok(js.includes("localStorage") && js.includes("ali-academy-progress-v1"), "progress must persist locally");
+assert.ok(js.includes("localStorage") && js.includes("ali-academy-progress-v2"), "progress must persist locally");
 assert.ok(html.includes('href="./styles.css"') && html.includes('src="./app.js"'), "page assets must be linked");
 assert.ok(html.includes('id="app"') && html.includes('id="mobile-nav"'), "app mount and responsive navigation must exist");
+assert.ok(js.includes("const CURRICULUM=["), "an explicit outcomes-based learning sequence must exist");
+assert.ok(js.includes("stale #lesson links never bypass onboarding"), "cold page loads should not open halfway through a lesson");
+assert.ok(js.includes("if(!state.writeReady)"), "a lesson cannot be completed without practising writing");
+assert.ok(js.includes("state.readingAnswer===v.sound"), "vowel practice should require a correct answer before advancing");
 assert.ok(rabbit.includes("@keyframes") && rabbit.includes("Али"), "animated mascot must exist");
 assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes("@keyframes rabbitWalk"), "lesson and world scene styles must exist");
 assert.ok(css.includes("@media(max-width:620px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
