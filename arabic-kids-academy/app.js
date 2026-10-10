@@ -243,6 +243,12 @@ function renderLesson(){
   }
   return '<section class="kid-lesson">'+progress+'<div class="write-task"><div class="write-task-head"><img src="./assets/rabbit.svg" alt=""><div><span class="eyebrow">МАСТЕРСКАЯ АЛИ</span><h1>Нарисуй '+l.name+'!</h1><p>Обведи букву пальцем или мышкой.</p></div></div><div class="writing-pad kid-writing-pad"><span class="trace-guide arabic" lang="ar" dir="rtl">'+l.ch+'</span><canvas id="trace-canvas" aria-label="Поле для тренировки написания арабской буквы"></canvas></div><div class="write-bottom"><span id="writing-status">'+(state.writeReady?'Ура! Можно закончить урок.':'Веди пальцем по форме буквы.')+'</span><button class="text-link" data-action="clear-canvas">Начать заново ↻</button></div><button class="btn btn-primary kid-main-cta" data-action="complete-lesson" '+(state.writeReady?'':'disabled')+'>Я написал! <span>⭐</span></button></div></section>';
 }
+function renderCelebration(){
+  const completed=LETTERS[Number.isInteger(state.justCompleted)?state.justCompleted:0];
+  const all=state.learned.length>=28;
+  const next=nextLetter();
+  return '<section class="kid-celebration"><div class="celebration-sky"><span class="celebration-cloud cloud-a">☁</span><span class="celebration-cloud cloud-b">☁</span><span class="celebration-sun">✦</span><div class="celebration-ground"></div><img src="./assets/rabbit.svg" alt="Али радуется вместе с тобой" class="celebration-rabbit"><div class="celebration-sticker">⭐<small>+'+(all?5:1)+'</small></div><span class="celebrate-confetti confetti-one">✦</span><span class="celebrate-confetti confetti-two">✧</span><span class="celebrate-confetti confetti-three">★</span></div><div class="kid-celebration-copy"><span class="welcome-tag">УРА! ТЫ СПРАВИЛСЯ! 🎉</span><h1>'+(all?'Ты открыл все буквы!':'Ты познакомился с буквой '+completed.name+'!')+'</h1><p>'+(all?'Весь алфавит собран! Али приготовил для тебя новые игры.':'Буква '+completed.ch+' теперь в твоей коллекции. Али гордится тобой!')+'</p><div class="earned-letter-row"><span class="arabic" lang="ar" dir="rtl">'+completed.ch+'</span><span><b>'+completed.name+'</b><small>Новая буква в коллекции</small></span><span class="earned-check">✓</span></div><button class="btn btn-primary kid-main-cta" data-action="next-letter">'+(all?'Посмотреть карту':'Вперёд, к следующей букве!')+' <span>→</span></button><button class="celebration-secondary" data-route="path">Посмотреть карту приключений</button></div></section>';
+}
 function renderReading(){
  const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
  const cards=VOWELS.map(function(x,j){return '<button class="vowel-card '+(j===i?'selected':'')+'" data-action="reading-pick" data-i="'+j+'"><span class="vowel-ar arabic" lang="ar" dir="rtl">ب'+x.mark+'</span><strong>'+x.name+'</strong><small>Звук «'+x.sound+'»</small></button>';}).join('');
@@ -417,7 +423,7 @@ function pickMemory(i){
 function handleAction(action,el){
   const i=Number(el.dataset.i);
   if(action==='continue'){if(state.learned.length>=28){route('path');return;}state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;}
-  if(action==='home-world'){const world=el.dataset.world;if(!canVisit(world)){route(world);return;}if(world==='letters'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;route('lesson');return;}route(world);return;}
+  if(action==='home-world'){const world=el.dataset.world;if(!canVisit(world)){route(world);return;}if(world==='letters'){if(state.learned.length>=28){route('letters');return;}state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;route('lesson');return;}route(world);return;}
   if(action==='open-reading'){state.readingIndex=0;route('reading');return;}
   if(action==='reading-pick'){state.readingIndex=Number(el.dataset.i)||0;state.readingAnswer='';render();return;}
   if(action==='reading-speak'){const v=VOWELS[Number(el.dataset.i)];if(v)speak(v.sample);return;}
