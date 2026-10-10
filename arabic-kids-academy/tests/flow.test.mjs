@@ -61,7 +61,7 @@ assert.equal(vm.runInContext("state.lessonStep",context),1,"rabbit's arrival sho
 assert.match(app.innerHTML,/Алиф!/, "the reveal should name the first letter");
 assert.match(app.innerHTML,/أسد[\s\S]*лев/, "Alif should be taught with a lion example, not the rabbit mascot");
 assert.match(app.innerHTML,/discovery-object[\s\S]*?🦁/, "the example object should be the main visual during reveal");
-const examples = vm.runInContext("LETTERS.map((letter,i)=>({letter:letter.ch,example:letterWord(letter)}))",context);
+const examples = JSON.parse(JSON.stringify(vm.runInContext("LETTERS.map((letter,i)=>({letter:letter.ch,example:letterWord(letter)}))",context)));
 assert.equal(examples.length,28,"every Arabic letter should have a visual example");
 assert.deepEqual(
   examples.slice(0,4).map(x=>[x.letter,x.example.ar,x.example.ru,x.example.emoji]),
