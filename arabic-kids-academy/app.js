@@ -130,7 +130,7 @@ function updateHeader(){
   const xp=document.getElementById('xp-count'),st=document.getElementById('streak-count');
   if(xp)xp.textContent=state.xp;
   if(st)st.textContent=state.streak||1;
-  document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===state.view||(state.view==='lesson'&&b.dataset.route==='letters')||(state.view==='profile'&&b.dataset.route==='profile')||(state.view==='phrases'&&b.dataset.route==='words'));});
+  document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===state.view||((state.view==='lesson'||state.view==='celebration')&&b.dataset.route==='letters')||(state.view==='profile'&&b.dataset.route==='profile')||(state.view==='phrases'&&b.dataset.route==='words'));});
 }
 function route(view){
   if(!view)view='home';
@@ -164,7 +164,7 @@ function missionDoneCount(){return ['lesson','game','listen'].filter(function(k)
 function render(){
   updateHeader();
   const app=document.getElementById('app');if(!app)return;
-  const views={home:renderHome,path:renderPath,letters:renderLetters,lesson:renderLesson,words:renderWords,phrases:renderPhrases,games:renderGames,profile:renderProfile};
+  const views={home:renderHome,path:renderPath,letters:renderLetters,lesson:renderLesson,celebration:renderCelebration,words:renderWords,phrases:renderPhrases,games:renderGames,profile:renderProfile};
   app.innerHTML='<div class="page-enter">'+(views[state.view]||renderHome)()+'</div>';
   app.focus({preventScroll:true});
   if(state.view==='lesson'&&state.lessonStep===3)wireCanvas();
@@ -250,6 +250,13 @@ function renderLesson(){
   const dots=steps.map(function(s,i){return '<span class="'+(i===step?'active':'')+'"></span>';}).join('');
   const walking=step===1?'walk':'';
   return '<div class="page-heading"><div><div class="eyebrow">УРОК '+String(state.letter+1).padStart(2,'0')+' · ОСТРОВ БУКВ</div><h1>Знакомимся: '+l.name+'</h1><p>Учимся через историю, слух, игру и движение — маленькими шагами.</p></div><button class="btn btn-ghost btn-small" data-route="letters">← К буквам</button></div><div class="lesson-layout"><section class="panel lesson-main"><div class="lesson-topline"><span>'+steps[step].toUpperCase()+'</span><span>Шаг '+(step+1)+' из 4</span></div><div class="progress-line"><i style="width:'+((step+1)/4*100)+'%"></i></div><div class="lesson-scene"><span class="lesson-sun"></span><span class="lesson-cloud">☁</span><div class="lesson-bubble" id="lesson-bubble">'+bubble+'</div><span class="lesson-object">'+word.emoji+'</span><img class="lesson-character '+walking+'" id="lesson-character" src="./assets/rabbit.svg" alt="Али идёт знакомиться с буквой"><div class="lesson-letter '+(step===1?'reveal':'')+'" id="lesson-letter"><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></div><span class="scene-caption">ТРОПИНКА НОВЫХ ОТКРЫТИЙ</span></div><div class="lesson-bottom"><p>★ За урок ты получишь 20 XP</p>'+bottomButton+'</div><div class="step-dots">'+dots+'</div></section><aside class="panel lesson-info">'+rightPanel+'</aside></div>';
+}
+function renderCelebration(){
+  const completed=LETTERS[state.justCompleted==null?0:state.justCompleted],next=nextLetter(),all=state.learned.length>=28;
+  const nextL=LETTERS[next];
+  const title=all?'Ты прошёл весь алфавит!':'Буква '+completed.name+' теперь в твоей коллекции!';
+  const sub=all?'Все 28 букв знакомы тебе. Это большая победа — впереди слова, фразы и новые игры.':'Каждый урок делает тебя увереннее. Отдохни мгновение, а потом отправляйся знакомиться со следующей буквой.';
+  return '<section class="celebration-wrap page-enter"><div class="celebration-top"><span class="celebration-confetti">✦</span><span class="celebration-confetti">✧</span><span class="celebration-confetti">✦</span><span class="celebration-confetti">★</span><span class="celebration-confetti">✧</span></div><div class="surface celebration-card"><div class="celebration-ribbon">🏆 УРОК ЗАВЕРШЁН</div><div class="celebration-main"><div class="celebration-character"><span class="celebration-orbit orbit-one">✦</span><span class="celebration-orbit orbit-two">⭐</span><span class="celebration-orbit orbit-three">✧</span><img src="./assets/rabbit.svg" alt="Али радуется твоей победе"></div><div class="celebration-copy"><span class="pill">✨ МАЛЕНЬКАЯ ПОБЕДА</span><h1>'+title+'</h1><p>'+sub+'</p><div class="celebration-rewards"><div><span>⭐</span><strong>+20 XP</strong><small>за урок</small></div><div><span>🔤</span><strong>'+state.learned.length+' / 28</strong><small>букв знакомы</small></div><div><span>🔥</span><strong>'+state.streak+'</strong><small>дней подряд</small></div></div><div class="celebration-progress"><div class="progress-line"><i style="width:'+(state.learned.length/28*100)+'%"></i></div><small>'+Math.round(state.learned.length/28*100)+'% алфавита открыто</small></div><div class="hero-actions"><button class="btn btn-primary" data-action="next-letter">'+(all?'Повторить буквы':'Встречаем '+nextL.name)+' <span>→</span></button><button class="btn btn-ghost" data-route="path">На карту приключений</button></div></div></div></div><div class="celebration-footer">🌷 Ты старался — и это главное. Али тобой гордится! 🌷</div></section>';
 }
 function renderWords(){
   const cats=CATEGORIES.map(function(c){return '<button class="filter-btn '+(state.wordFilter===c.id?'active':'')+'" data-action="word-filter" data-filter="'+c.id+'">'+c.label+'</button>';}).join('');
@@ -348,10 +355,10 @@ function showModal(title,body,buttons){
 }
 function closeModal(){const root=document.getElementById('modal-root');if(root)root.innerHTML='';}
 function finishLetter(){
-  const i=state.letter;
-  if(state.learned.indexOf(i)<0){state.learned.push(i);state.learned.sort(function(a,b){return a-b;});addXP(20);toast('Урок завершён! +20 XP и звёзды ⭐');}
-  else{addXP(5);toast('Повторение засчитано! +5 XP');}
-  markMission('lesson');state.lessonStep=0;quizFeedback='';route('home');
+  const i=state.letter;state.justCompleted=i;
+  if(state.learned.indexOf(i)<0){state.learned.push(i);state.learned.sort(function(a,b){return a-b;});addXP(20);}
+  else{addXP(5);}
+  markMission('lesson');state.lessonStep=0;quizFeedback='';route('celebration');
 }
 function answerLetter(i){
   const target=state.letter,fb=document.getElementById('lesson-feedback');
@@ -400,6 +407,7 @@ function pickMemory(i){
 function handleAction(action,el){
   const i=Number(el.dataset.i);
   if(action==='continue'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';route('lesson');return;}
+  if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
   if(action==='open-letter'){
     if(!isUnlocked(i)){toast('Сначала закончи предыдущий урок — и эта буква откроется! 🔒');return;}
     state.letter=i;state.lessonStep=0;quizFeedback='';route('lesson');return;
