@@ -61,6 +61,15 @@ assert.equal(vm.runInContext("state.lessonStep",context),1,"rabbit's arrival sho
 assert.match(app.innerHTML,/Алиф!/, "the reveal should name the first letter");
 assert.match(app.innerHTML,/أسد[\s\S]*лев/, "Alif should be taught with a lion example, not the rabbit mascot");
 assert.match(app.innerHTML,/discovery-object[\s\S]*?🦁/, "the example object should be the main visual during reveal");
+const examples = vm.runInContext("LETTERS.map((letter,i)=>({letter:letter.ch,example:letterWord(letter)}))",context);
+assert.equal(examples.length,28,"every Arabic letter should have a visual example");
+assert.deepEqual(
+  examples.slice(0,4).map(x=>[x.letter,x.example.ar,x.example.ru,x.example.emoji]),
+  [["ا","أسد","лев","🦁"],["ب","بطة","утка","🦆"],["ت","تفاحة","яблоко","🍎"],["ث","ثعلب","лиса","🦊"]],
+  "the first lessons should show the appropriate object, not the mascot as a letter example"
+);
+assert.ok(examples.every((x,i)=>x.example.idx===i),"each of the 28 letters should map to its own indexed example");
+
 vm.runInContext("handleAction('lesson-next',{dataset:{}})",context);
 assert.equal(vm.runInContext("state.lessonStep",context),2,"the story should move to recognition practice");
 assert.match(app.innerHTML,/Найди букву Алиф!/, "recognition should ask one clear question");
@@ -76,4 +85,10 @@ vm.runInContext("finishLetter()",context);
 assert.equal(vm.runInContext("state.view",context),"celebration","completing a lesson should show a celebration");
 assert.ok(vm.runInContext("state.learned.includes(0)",context),"Alif should be recorded as learned");
 assert.match(app.innerHTML,/kid-celebration/, "the child should see the reward moment");
+vm.runInContext("handleAction('next-letter',{dataset:{}})",context);
+assert.equal(vm.runInContext("state.letter",context),1,"after Alif, the next lesson should be Ba");
+vm.runInContext("handleAction('meet-letter',{dataset:{}})",context);
+assert.match(app.innerHTML,/بطة[\s\S]*утка/, "Ba's reveal should show duck in Arabic and Russian");
+assert.match(app.innerHTML,/discovery-object[\s\S]*?🦆/, "Ba should feature a duck illustration, separate from Ali the rabbit guide");
+
 console.log("PASS: fresh home → Alif discovery → rabbit reveal → recognition → writing → celebration.");
