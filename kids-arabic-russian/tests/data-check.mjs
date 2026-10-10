@@ -1,22 +1,17 @@
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
-
-const app = readFileSync(new URL("../app.js", import.meta.url), "utf8");
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const dataMatch = app.match(/const DATA=(\[[\s\S]*?\])\.map/);
-assert.ok(dataMatch, "the app should define the lesson word data");
-const rows = JSON.parse(dataMatch[1].replace(/'/g, '"'));
-assert.equal(rows.length, 28, "Arabic alphabet data should include 28 letters");
-assert.equal(new Set(rows.map(row => row[0])).size, 28, "Arabic letters should be unique");
-for (const [index, row] of rows.entries()) {
-  assert.equal(row.length, 8, `entry ${index + 1} should contain all eight fields`);
-  assert.ok(/[\u0600-\u06FF]/u.test(row[0]), `entry ${index + 1} should be an Arabic character`);
-  for (const field of row.slice(1, 7)) assert.ok(String(field).trim(), `entry ${index + 1} has an empty learning field`);
-  assert.ok(["animals", "nature", "things"].includes(row[7]), `entry ${index + 1} has an invalid category`);
-}
-for (const id of ["home", "letters", "words", "games", "progress"]) {
-  assert.ok(html.includes(`id="${id}"`), `page view "${id}" should exist`);
-}
-assert.ok(html.includes("./assets/mascot.svg"), "the app should include the local SVG mascot");
-assert.ok(html.includes('id="soundToggle"'), "the UI should expose a sound control");
-console.log("PASS: 28 unique Arabic letters, complete learning entries, all five views, local mascot, and sound control.");
+const app=readFileSync(new URL("../app.js",import.meta.url),"utf8");
+const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const css=readFileSync(new URL("../styles.css",import.meta.url),"utf8");
+const start=app.indexOf("const L="), end=app.indexOf("],COL=",start);
+assert.ok(start>=0&&end>start,"original letter data should exist");
+const letters=JSON.parse(app.slice(start+"const L=".length,end+1));
+assert.equal(letters.length,28,"app should retain all 28 letters");
+assert.equal(new Set(letters.map(x=>x.ch)).size,28,"Arabic letters should be unique");
+for(const [i,x] of letters.entries())assert.ok(x.ch&&x.nm&&x.ar&&x.wd&&x.tr&&x.ru,`letter ${i+1} should keep its original learning data`);
+for(const feature of ["function hub()","function learn(i)","function paint()","function g1()","function g2()","function g3()"])assert.ok(app.includes(feature),`missing original feature ${feature}`);
+assert.ok(html.includes('id="app"'),"original app mount should exist");
+assert.ok(html.includes('href="./styles.css"')&&html.includes('src="./app.js"'),"split assets should be linked");
+assert.ok(js.includes("./assets/mascot.svg"),"homepage should use its mascot");
+assert.ok(css.includes(".welcome-card")&&css.includes("@media"),"responsive refinements should exist");
+console.log("PASS: original 28-letter dataset, lessons, tracing, three games, mascot, and responsive styling.");
