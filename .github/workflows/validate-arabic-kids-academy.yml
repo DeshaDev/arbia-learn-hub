@@ -19,3 +19,5 @@ jobs:
         run: node --check arabic-kids-academy/app.js
       - name: Test academy structure and features
         run: node arabic-kids-academy/tests/academy.test.mjs
+      - name: Smoke-test the first lesson flow
+        run: node arabic-kids-academy/tests/flow.test.mjs
