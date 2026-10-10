@@ -15,6 +15,8 @@ for (const name of ["meet-letter", "complete-lesson", "wireCanvas", "pickMemory"
 for (const game of ["catch", "mail", "memory", "listen"]) {
   assert.ok(js.includes("id:'" + game + "'"), "missing game mode: " + game);
 }
+assert.ok(!/\bl\.i\b|\bx\.i\b/.test(js), "letter indices must use array positions, not missing .i fields");
+assert.ok(js.includes("LETTERS.map(function(l,i){return i;})"), "game targets must use valid letter indices");
 assert.ok(js.includes("localStorage") && js.includes("ali-academy-progress-v1"), "progress must persist locally");
 assert.ok(html.includes('href="./styles.css"') && html.includes('src="./app.js"'), "page assets must be linked");
 assert.ok(html.includes('id="app"') && html.includes('id="mobile-nav"'), "app mount and responsive navigation must exist");
