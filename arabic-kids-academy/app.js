@@ -92,7 +92,7 @@ const BADGES = [
  {id:'xp100',icon:'⭐',title:'Сто звёздных шагов',desc:'Набери 100 XP',ok:s=>s.xp>=100},
  {id:'streak3',icon:'🔥',title:'Привычка растёт',desc:'Занимайся 3 дня подряд',ok:s=>s.streak>=3}
 ];
-const STORE_KEY = 'ali-academy-progress-v1';
+const STORE_KEY = 'ali-academy-progress-v2';
 function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false};}
 function loadState(){
   try{
@@ -164,7 +164,7 @@ function missionDoneCount(){return ['lesson','game','listen'].filter(function(k)
 function render(){
   updateHeader();
   const app=document.getElementById('app');if(!app)return;
-  const views={home:renderHome,path:renderPath,letters:renderLetters,lesson:renderLesson,celebration:renderCelebration,words:renderWords,phrases:renderPhrases,games:renderGames,profile:renderProfile};
+  const views={home:renderHome,path:renderPath,letters:renderLetters,lesson:renderLesson,celebration:renderCelebration,words:renderWords,phrases:renderPhrases,games:renderGames,profile:renderProfile,reading:renderReading};
   app.innerHTML='<div class="page-enter">'+(views[state.view]||renderHome)()+'</div>';
   app.focus({preventScroll:true});
   if(state.view==='lesson'&&state.lessonStep===3)wireCanvas();
@@ -257,6 +257,26 @@ function renderCelebration(){
   const title=all?'Ты прошёл весь алфавит!':'Буква '+completed.name+' теперь в твоей коллекции!';
   const sub=all?'Все 28 букв знакомы тебе. Это большая победа — впереди слова, фразы и новые игры.':'Каждый урок делает тебя увереннее. Отдохни мгновение, а потом отправляйся знакомиться со следующей буквой.';
   return '<section class="celebration-wrap page-enter"><div class="celebration-top"><span class="celebration-confetti">✦</span><span class="celebration-confetti">✧</span><span class="celebration-confetti">✦</span><span class="celebration-confetti">★</span><span class="celebration-confetti">✧</span></div><div class="surface celebration-card"><div class="celebration-ribbon">🏆 УРОК ЗАВЕРШЁН</div><div class="celebration-main"><div class="celebration-character"><span class="celebration-orbit orbit-one">✦</span><span class="celebration-orbit orbit-two">⭐</span><span class="celebration-orbit orbit-three">✧</span><img src="./assets/rabbit.svg" alt="Али радуется твоей победе"></div><div class="celebration-copy"><span class="pill">✨ МАЛЕНЬКАЯ ПОБЕДА</span><h1>'+title+'</h1><p>'+sub+'</p><div class="celebration-rewards"><div><span>⭐</span><strong>+20 XP</strong><small>за урок</small></div><div><span>🔤</span><strong>'+state.learned.length+' / 28</strong><small>букв знакомы</small></div><div><span>🔥</span><strong>'+state.streak+'</strong><small>дней подряд</small></div></div><div class="celebration-progress"><div class="progress-line"><i style="width:'+(state.learned.length/28*100)+'%"></i></div><small>'+Math.round(state.learned.length/28*100)+'% алфавита открыто</small></div><div class="hero-actions"><button class="btn btn-primary" data-action="next-letter">'+(all?'Повторить буквы':'Встречаем '+nextL.name)+' <span>→</span></button><button class="btn btn-ghost" data-route="path">На карту приключений</button></div></div></div></div><div class="celebration-footer">🌷 Ты старался — и это главное. Али тобой гордится! 🌷</div></section>';
+}
+const VOWELS=[
+ {id:'fatha',name:'Фатха',mark:'َ',sound:'а',sample:'بَ',place:'Сверху буквы',desc:'Короткий звук «а». Маленькая наклонная черта стоит над буквой.',color:'#fff0d6',example:'بَ'},
+ {id:'kasra',name:'Касра',mark:'ِ',sound:'и',sample:'بِ',place:'Под буквой',desc:'Короткий звук «и». Маленькая наклонная черта стоит под буквой.',color:'#e5f4ff',example:'بِ'},
+ {id:'damma',name:'Дамма',mark:'ُ',sound:'у',sample:'بُ',place:'Сверху буквы',desc:'Короткий звук «у». Маленький завиток стоит над буквой.',color:'#e2f8ed',example:'بُ'}
+];
+function renderReading(){
+ const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
+ const cards=VOWELS.map(function(x,j){return '<button class="vowel-card '+(j===i?'selected':'')+'" data-action="reading-pick" data-i="'+j+'"><span class="vowel-ar arabic" lang="ar" dir="rtl">ب'+x.mark+'</span><strong>'+x.name+'</strong><small>Звук «'+x.sound+'»</small></button>';}).join('');
+ const choices=['а','и','у'].map(function(x){return '<button class="answer-option '+(state.readingAnswer===x?(x===v.sound?'correct':'incorrect'):'')+'" data-action="reading-answer" data-answer="'+x+'" '+(state.readingAnswer?'disabled':'')+'>«'+x+'»</button>';}).join('');
+ return headerOf('МАСТЕРСКАЯ ЧТЕНИЯ','Буква + звук = слог','Теперь посмотрим, как короткие гласные помогают читать простые слоги. Этот этап идёт после знакомства с формой букв.',true)
+ +'<section class="reading-intro panel"><div class="reading-step-tag">УРОК '+(i+1)+' ИЗ 3 · КОРОТКИЕ ГЛАСНЫЕ</div><div class="reading-board" style="--vowel-bg:'+v.color+'"><div class="reading-board-copy"><span class="eyebrow">'+v.place.toUpperCase()+'</span><h2>'+v.name+'</h2><p>'+v.desc+'</p><div class="reading-example arabic" lang="ar" dir="rtl">ب'+v.mark+'</div><div class="reading-sound">Звук: <b>«'+v.sound+'»</b></div><button class="btn btn-purple" data-action="reading-speak" data-i="'+i+'">🔊 Послушать слог</button></div><div class="reading-board-art"><div class="vowel-orbit orbit-a">✦</div><div class="vowel-orbit orbit-b">✧</div><img src="./assets/rabbit.svg" alt="Али помогает читать слоги"></div></div><div class="vowel-cards">'+cards+'</div></section><section class="panel reading-quiz"><div class="panel-head"><div><h3>Мини-проверка</h3><small>Узнаём звук по знаку</small></div><span class="pill">+5 XP за правильный ответ</span></div><div class="reading-prompt"><p>Какой короткий звук мы слышим?</p><strong class="arabic" lang="ar" dir="rtl">ب'+v.mark+'</strong></div><div class="reading-answers">'+choices+'</div><div class="feedback">'+(state.readingAnswer?(state.readingAnswer===v.sound?'Верно! Ты заметил знак и выбрал нужный звук.':'Посмотри ещё раз на знак и попробуй другой ответ.'):'Выбери звук. Не спеши!')+'</div><div class="panel-bottom"><p>Учимся читать маленькими шагами.</p><button class="btn btn-primary" data-action="reading-next" '+(state.readingAnswer!==v.sound?'disabled':'')+'>'+(i===2?'Завершить этап ✓':'Следующий знак →')+'</button></div></section>';
+}
+function answerReading(answer){
+ const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
+ if(state.readingAnswer)return;
+ state.readingAnswer=answer;
+ if(answer===v.sound){addXP(5);state.answers++;saveState();toast('Правильно! +5 XP ⭐');}
+ else toast('Почти! Посмотри, где стоит знак.');
+ render();
 }
 function renderWords(){
   const cats=CATEGORIES.map(function(c){return '<button class="filter-btn '+(state.wordFilter===c.id?'active':'')+'" data-action="word-filter" data-filter="'+c.id+'">'+c.label+'</button>';}).join('');
@@ -407,6 +427,11 @@ function pickMemory(i){
 function handleAction(action,el){
   const i=Number(el.dataset.i);
   if(action==='continue'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';route('lesson');return;}
+  if(action==='open-reading'){state.readingIndex=0;route('reading');return;}
+  if(action==='reading-pick'){state.readingIndex=Number(el.dataset.i)||0;state.readingAnswer='';render();return;}
+  if(action==='reading-speak'){const v=VOWELS[Number(el.dataset.i)];if(v)speak(v.sample);return;}
+  if(action==='reading-answer'){answerReading(el.dataset.answer);return;}
+  if(action==='reading-next'){state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
   if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
   if(action==='open-letter'){
     if(!isUnlocked(i)){toast('Сначала закончи предыдущий урок — и эта буква откроется! 🔒');return;}
@@ -424,7 +449,7 @@ function handleAction(action,el){
   if(action==='lesson-answer'){answerLetter(i);return;}
   if(action==='skip-to-write'){state.lessonStep=3;render();return;}
   if(action==='speak-letter'){speak(currentLetter().ch);return;}
-  if(action==='speak-word'){speak(letterWord(currentLetter()).ar);state.wordsHeard++;markMission('listen');return;}
+  if(action==='speak-word'){speak(letterWord(currentLetter()).ar);state.wordsHeard++;markMission('listen');saveState();return;}
   if(action==='clear-canvas'){clearCanvas();return;}
   if(action==='complete-lesson'){finishLetter();return;}
   if(action==='word-filter'){state.wordFilter=el.dataset.filter;render();return;}
@@ -433,7 +458,7 @@ function handleAction(action,el){
   if(action==='speak-dialog'){speak(PHRASES[0].ar+' ... '+PHRASES[4].ar+' ... '+PHRASES[5].ar+' ... '+PHRASES[1].ar);markMission('listen');return;}
   if(action==='start-game'){state.game=null;startGame(el.dataset.game);return;}
   if(action==='leave-game'){state.game=null;route('games');return;}
-  if(action==='game-speak'){const g=state.game;if(g){const l=LETTERS[g.target];const w=WORDS.find(function(x){return x.idx===g.target;});speak(w?w.ar:l.ch);markMission('listen');}return;}
+  if(action==='game-speak'){const g=state.game;if(g){const l=LETTERS[g.target];const w=letterWord(l);speak(g.kind==='listen'?w.ar:(w.ar));markMission('listen');}return;}
   if(action==='game-answer'){const g=state.game;if(g)advanceGame(Number(el.dataset.i)===g.target);return;}
   if(action==='game-answer-word'){
     const g=state.game;if(!g)return;const selected=WORDS[Number(el.dataset.word)];advanceGame(!!selected&&(g.kind==='listen'?selected.idx===g.target:selected.idx===g.target));return;
@@ -466,5 +491,13 @@ document.getElementById('mobile-menu').addEventListener('click',function(){docum
 document.getElementById('about-button').addEventListener('click',about);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();document.getElementById('mobile-nav').classList.remove('open');}});
 visitToday();
-if(location.hash&&['home','path','letters','words','phrases','games','profile'].indexOf(location.hash.slice(1))>=0)state.view=location.hash.slice(1);
+// Every fresh visit starts at the welcome map, not inside a saved lesson.
+// A lesson can be resumed from the home CTA; stale #lesson links never bypass onboarding.
+const allowedViews=['home','path','letters','words','phrases','games','profile','reading'];
+const requestedView=(location.hash||'').slice(1);
+if(allowedViews.indexOf(requestedView)>=0)state.view=requestedView;
+else{
+  state.view='home';
+  try{history.replaceState(null,'',location.pathname+location.search+'#home');}catch(e){}
+}
 render();
