@@ -9,9 +9,9 @@ const elements = new Map();
 function makeElement(id) {
   const el = {
     id, innerHTML:"", textContent:"", value:"", disabled:false, hidden:false, width:0, height:0,
-    dataset:{}, className:"",
+    dataset:{}, className:"", listeners:{},
     classList:{ add(){}, remove(){}, toggle(){}, contains(){return false;} },
-    addEventListener(){}, focus(){}, setPointerCapture(){},
+    addEventListener(name,fn){this.listeners[name]=fn;}, focus(){}, setPointerCapture(){},
     getBoundingClientRect(){return {width:500,height:210,left:0,top:0};},
     getContext(){return ctx2d;}
   };
@@ -65,7 +65,12 @@ assert.match(app.innerHTML,/Найди букву Алиф!/, "recognition shoul
 vm.runInContext("answerLetter(0)",context);
 assert.equal(vm.runInContext("state.lessonStep",context),3,"correct recognition should lead to handwriting");
 assert.match(app.innerHTML,/Нарисуй Алиф!/, "the final lesson step should be writing practice");
-vm.runInContext("state.writeReady=true;finishLetter()",context);
+const canvas = elements.get("trace-canvas");
+assert.ok(canvas && canvas.listeners.pointerdown && canvas.listeners.pointermove, "the writing canvas should register pointer input");
+canvas.listeners.pointerdown({clientX:15,clientY:20,pointerId:1,preventDefault(){}});
+canvas.listeners.pointermove({clientX:35,clientY:42,pointerId:1,preventDefault(){}});
+assert.equal(vm.runInContext("state.writeReady",context),true,"actually tracing the letter should unlock lesson completion");
+vm.runInContext("finishLetter()",context);
 assert.equal(vm.runInContext("state.view",context),"celebration","completing a lesson should show a celebration");
 assert.ok(vm.runInContext("state.learned.includes(0)",context),"Alif should be recorded as learned");
 assert.match(app.innerHTML,/kid-celebration/, "the child should see the reward moment");
