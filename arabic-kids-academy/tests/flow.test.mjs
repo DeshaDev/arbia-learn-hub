@@ -96,4 +96,34 @@ vm.runInContext("handleAction('meet-letter',{dataset:{}})",context);
 assert.match(app.innerHTML,/بطة[\s\S]*утка/, "Ba's reveal should show duck in Arabic and Russian");
 assert.match(app.innerHTML,/discovery-showcase[\s\S]*?letter-friends\.svg#duck/, "Ba should feature a custom SVG duck next to the large Arabic letter");
 
-console.log("PASS: fresh home → Alif discovery → rabbit reveal → recognition → writing → celebration.");
+
+for (const kind of ["catch","mail","listen"]) {
+  vm.runInContext("state.game=null;state.view='games';render()",context);
+  vm.runInContext("handleAction('start-game',{dataset:{game:'"+kind+"'}})",context);
+  assert.equal(vm.runInContext("state.game.kind",context),kind,"game should start: "+kind);
+  assert.match(app.innerHTML,/game-challenge-panel/,kind+" should render its own challenge scene");
+  assert.match(app.innerHTML,/letter-friends\.svg#/,kind+" should use original SVG illustrations");
+  if(kind==="catch") {
+    vm.runInContext("handleAction('game-speak',{dataset:{}})",context);
+    vm.runInContext("handleAction('game-answer',{dataset:{i:String(state.game.target)}})",context);
+  } else {
+    vm.runInContext("handleAction('game-speak',{dataset:{}})",context);
+    const pick=vm.runInContext("WORDS.indexOf(WORDS.find(w=>w.idx===state.game.target))",context);
+    vm.runInContext("handleAction('game-answer-word',{dataset:{word:String("+pick+")}})",context);
+  }
+  assert.equal(vm.runInContext("state.game.answered",context),true,kind+" should provide explicit feedback after an answer");
+  assert.equal(vm.runInContext("state.game.correct",context),true,kind+" should recognise the right answer");
+  assert.match(app.innerHTML,/Следующий раунд/,kind+" should wait for the child to advance");
+  vm.runInContext("handleAction('game-next',{dataset:{}})",context);
+  assert.equal(vm.runInContext("state.game.round",context),1,kind+" should move only after the child presses next");
+}
+vm.runInContext("state.game=null;handleAction('start-game',{dataset:{game:'memory'}})",context);
+assert.equal(vm.runInContext("state.game.deck.length",context),8,"memory game should create four SVG-letter pairs");
+const pair=vm.runInContext("state.game.deck[0].pair",context);
+const letterCard=vm.runInContext("state.game.deck.findIndex(c=>c.pair==="+pair+"&&c.type==='letter')",context);
+const wordCard=vm.runInContext("state.game.deck.findIndex(c=>c.pair==="+pair+"&&c.type==='word')",context);
+vm.runInContext("handleAction('memory-pick',{dataset:{card:String("+letterCard+")}})",context);
+vm.runInContext("handleAction('memory-pick',{dataset:{card:String("+wordCard+")}})",context);
+assert.equal(vm.runInContext("state.game.matched.length",context),2,"memory should match the letter to the SVG friend");
+
+console.log("PASS: fresh home → SVG letter lessons → handwriting → celebration → four interactive game modes.");
