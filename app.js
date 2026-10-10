@@ -92,8 +92,8 @@ const BADGES = [
  {id:'xp100',icon:'⭐',title:'Сто звёздных шагов',desc:'Набери 100 XP',ok:s=>s.xp>=100},
  {id:'streak3',icon:'🔥',title:'Привычка растёт',desc:'Занимайся 3 дня подряд',ok:s=>s.streak>=3}
 ];
-const STORE_KEY = 'ali-academy-progress-v1';
-function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false};}
+const STORE_KEY = 'ali-academy-progress-v2';
+function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false,writeReady:false,readingIndex:0,readingAnswer:''};}
 function loadState(){
   try{
     const raw=JSON.parse(localStorage.getItem(STORE_KEY)||'null');
@@ -130,7 +130,7 @@ function updateHeader(){
   const xp=document.getElementById('xp-count'),st=document.getElementById('streak-count');
   if(xp)xp.textContent=state.xp;
   if(st)st.textContent=state.streak||1;
-  document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===state.view||((state.view==='lesson'||state.view==='celebration')&&b.dataset.route==='letters')||(state.view==='profile'&&b.dataset.route==='profile')||(state.view==='phrases'&&b.dataset.route==='words'));});
+  document.querySelectorAll('.nav-link').forEach(function(b){b.classList.toggle('active',b.dataset.route===state.view||((state.view==='lesson'||state.view==='celebration')&&b.dataset.route==='letters')||(state.view==='profile'&&b.dataset.route==='profile')||(state.view==='phrases'&&b.dataset.route==='words'||state.view==='reading'&&b.dataset.route==='reading'));});
 }
 function route(view){
   if(!view)view='home';
@@ -164,7 +164,7 @@ function missionDoneCount(){return ['lesson','game','listen'].filter(function(k)
 function render(){
   updateHeader();
   const app=document.getElementById('app');if(!app)return;
-  const views={home:renderHome,path:renderPath,letters:renderLetters,lesson:renderLesson,celebration:renderCelebration,words:renderWords,phrases:renderPhrases,games:renderGames,profile:renderProfile};
+  const views={home:renderHome,path:renderPath,letters:renderLetters,lesson:renderLesson,celebration:renderCelebration,words:renderWords,phrases:renderPhrases,games:renderGames,profile:renderProfile,reading:renderReading};
   app.innerHTML='<div class="page-enter">'+(views[state.view]||renderHome)()+'</div>';
   app.focus({preventScroll:true});
   if(state.view==='lesson'&&state.lessonStep===3)wireCanvas();
@@ -191,30 +191,24 @@ function renderHome(){
   return '<section class="hero"><div class="hero-copy"><span class="pill">✨ ТВОЁ ЯЗЫКОВОЕ ПРИКЛЮЧЕНИЕ</span><h1>Арабский мир<br>начинается с <em>буквы.</em></h1><p>Путешествуй вместе с Али: узнавай буквы, собирай слова, слушай арабскую речь и открывай новые миры. Здесь можно учиться играя — в своём темпе.</p><div class="hero-actions"><button class="btn btn-primary" data-action="continue">Продолжить путь <span>→</span></button><button class="btn btn-ghost" data-route="path">Посмотреть карту</button></div><div class="hero-trust"><span><i>✓</i> Короткие уроки</span><span><i>✓</i> Игры и награды</span><span><i>✓</i> Прогресс сохраняется</span></div></div><div class="hero-world" id="hero-world"><span class="sun"></span><span class="cloud cloud-one"></span><span class="cloud cloud-two"></span><span class="world-hill hill-one"></span><span class="world-hill hill-two"></span><span class="pathway"></span><span class="speech-bubble" id="hero-bubble"><strong>Привет! Я Али 🐰</strong>Давай найдём первую букву и узнаем, как она звучит!</span><div class="hero-letter" id="hero-letter"><span class="arabic" lang="ar" dir="rtl">'+LETTERS[nx].ch+'</span><small>'+(nx===0?'Алиф · первая буква':LETTERS[nx].name+' · твой следующий шаг')+'</small></div><span class="letter-spark">✦</span><span class="floating-star star-one">✦</span><span class="floating-star star-two">✧</span><img class="rabbit-hero" id="hero-rabbit" src="./assets/rabbit.svg" alt="Али, зайчик-проводник"><span class="world-flower flower-one">🌼</span><span class="world-flower flower-two">🌷</span><span class="world-label">СТАРТ ПУТЕШЕСТВИЯ</span></div></section><section class="kpi-row"><div class="kpi"><span class="kpi-icon">🔤</span><div><strong>'+learnedCount+' / 28</strong><small>букв уже знакомы</small></div></div><div class="kpi"><span class="kpi-icon">⭐</span><div><strong>'+state.xp+' XP</strong><small>твой опыт</small></div></div><div class="kpi"><span class="kpi-icon">🔥</span><div><strong>'+state.streak+' '+plural(state.streak,['день','дня','дней'])+'</strong><small>серия занятий</small></div></div><div class="kpi"><span class="kpi-icon">🏅</span><div><strong>Уровень '+level+'</strong><small>'+(100-xpIntoLevel())+' XP до следующего</small></div></div></section><section class="mission-strip"><span class="mission-icon">🧭</span><div><b>Твоё задание на сегодня</b><p>Выполни три маленьких миссии — и день станет ещё ярче.</p><div class="progress-line" style="margin-top:9px"><i style="width:'+(done/3*100)+'%"></i></div></div><span class="mission-reward">'+done+' / 3 выполнено</span></section>'+sectionTitle('ТВОЯ КАРТА ПРИКЛЮЧЕНИЙ','Куда отправимся сегодня?','Каждый мир помогает освоить новый навык.','path','Весь путь')+'<div class="path-preview">'+cards+'</div><div class="content-grid"><section class="panel"><div class="panel-head"><div><h3>Остров букв</h3><small>Первые шаги к алфавиту</small></div><button class="text-link" data-route="letters">Все буквы →</button></div><div class="progress-line"><i style="width:'+pct+'%"></i></div><div class="panel-bottom"><p>'+pct+'% пути пройдено<br><b style="color:var(--ink)">'+(learnedCount===28?'Ты освоил весь алфавит!':'Следующая буква — '+LETTERS[nx].name)+'</b></p><button class="btn btn-purple btn-small" data-action="continue">'+(learnedCount?'Продолжить':'Начать')+' →</button></div><div class="map-steps">'+mini+'</div></section><section class="panel"><div class="panel-head"><div><h3>Маленькие миссии</h3><small>У тебя всё получится</small></div><span class="pill">'+done+'/3</span></div><div class="quest-list">'+missionHTML+'</div></section></div>';
 }
 function plural(n,forms){const x=Math.abs(n)%100,y=x%10;if(x>10&&x<20)return forms[2];if(y>1&&y<5)return forms[1];if(y===1)return forms[0];return forms[2];}
+const CURRICULUM=[
+ {n:'01',title:'Знакомство с буквами',sub:'Форма, имя и первый звук',icon:'🔤',route:'letters',outcomes:['узнать графическую форму буквы','назвать букву по-русски и по-арабски','найти её в начале знакомого слова'],check:'Ученик узнаёт букву среди похожих вариантов.',status:'В работе'},
+ {n:'02',title:'Похожие буквы и точки',sub:'Учимся замечать различия',icon:'🔎',route:'letters',outcomes:['сравнить семейства ب ت ث и ج ح خ','заметить положение и число точек','объяснить, чем отличаются похожие формы'],check:'Ученик не путает буквы одного семейства.',status:'Встроено в уроки'},
+ {n:'03',title:'Короткие гласные',sub:'Фатха, касра и дамма',icon:'◌َ',route:'reading',outcomes:['узнать три коротких знака','прочитать слоги بَ بِ بُ','соотнести знак со звуком'],check:'Ученик правильно выбирает звук по огласовке.',status:'Практикум'},
+ {n:'04',title:'Первый словарик',sub:'Слова из близкого ребёнку мира',icon:'🍎',route:'words',outcomes:['узнать названия животных и предметов','услышать слово и повторить его','заметить знакомую букву в слове'],check:'Ученик узнаёт слово по звучанию и смыслу.',status:'Открыто'},
+ {n:'05',title:'Первые фразы',sub:'Приветствие и знакомство',icon:'💬',route:'phrases',outcomes:['поздороваться','поблагодарить','спросить имя и представиться'],check:'Ученик воспроизводит короткий диалог по образцу.',status:'Открыто'},
+ {n:'06',title:'Повторение в игре',sub:'Память, выбор и аудирование',icon:'🎮',route:'games',outcomes:['различать знакомые буквы','вспоминать слова без подсказки','учиться на ошибках'],check:'Ученик переносит знания в новую игровую задачу.',status:'Открыто'}
+];
 function renderPath(){
-  const next=nextLetter();
-  const sections=[
-   {title:'01 · ОСТРОВ БУКВ',desc:'Учимся видеть форму, замечать точки и узнавать звук.',icon:'🔤',from:0,to:7,route:'letters'},
-   {title:'02 · САД СЛОВ',desc:'Встречаем животных, предметы, еду и природу.',icon:'🍎',from:8,to:15,route:'words'},
-   {title:'03 · ЛЕС ЗВУКОВ',desc:'Слушаем слова, повторяем и замечаем знакомые буквы.',icon:'🎧',from:16,to:21,route:'games'},
-   {title:'04 · ПЛОЩАДЬ ФРАЗ',desc:'Приветствуем друзей и говорим первые фразы.',icon:'💬',from:22,to:27,route:'phrases'}
-  ];
-  let html='';
-  sections.forEach(function(s,si){
-    let nodes='';
-    for(let i=s.from;i<=s.to;i++){
-      const l=LETTERS[i],done=state.learned.indexOf(i)>=0,current=i===next,locked=!isUnlocked(i);
-      nodes+='<button class="map-step '+(done?'done':current?'current':locked?'locked':'')+'" data-action="open-letter" data-i="'+i+'" '+(locked?'aria-label="Буква '+l.name+', пока закрыта"':'')+'><strong>'+l.ch+'</strong><small>'+(done?'✓':String(i+1).padStart(2,'0'))+'</small></button>';
-    }
-    const progress=LETTERS.slice(s.from,s.to+1).filter(function(l){return state.learned.indexOf(LETTERS.indexOf(l))>=0;}).length;
-    html+='<section class="panel" style="margin-bottom:15px"><div class="panel-head"><div><span class="pill">'+s.icon+' '+s.title+'</span><h3 style="margin-top:10px">'+['Остров букв','Сад слов','Лес звуков','Площадь фраз'][si]+'</h3><small>'+s.desc+'</small></div><div class="tiny muted">'+progress+' / '+(s.to-s.from+1)+'</div></div><div class="map-steps">'+nodes+'</div><div class="panel-bottom"><p>За каждое занятие ты собираешь XP и открываешь новые достижения.</p><button class="btn btn-ghost btn-small" data-route="'+s.route+'">Исследовать →</button></div></section>';
-  });
-  const feats=[
-   {icon:'✍️',title:'Мастерская письма',desc:'Обводи буквы в уроках, запоминай направление и форму.',route:'letters'},
-   {icon:'🎮',title:'Игровая долина',desc:'Четыре мини-игры помогают повторять без скучной зубрёжки.',route:'games'},
-   {icon:'🗣️',title:'Разговорная площадь',desc:'Первые фразы для встречи, знакомства и благодарности.',route:'phrases'}
-  ];
-  return headerOf('КАРТА ПРИКЛЮЧЕНИЯ','Твой путь в арабский мир','Каждый шаг открывает новое умение. Пройди остров букв, загляни в сад слов, потренируй слух и начни разговаривать.',true)+'<div class="content-grid"><div>'+html+'</div><aside><div class="surface panel"><div class="panel-head"><h3>Твой уровень</h3><span class="pill">Ур. '+xpLevel()+'</span></div><h2 style="font-size:27px;margin:8px 0">'+state.xp+' XP</h2><p class="muted tiny">Ещё '+(100-xpIntoLevel())+' XP — и ты поднимешься выше!</p><div class="progress-line"><i style="width:'+xpIntoLevel()+'%"></i></div><div class="panel-bottom"><p>'+state.learned.length+' знакомых букв из 28</p><span>⭐ '+state.stars+'</span></div></div>'+feats.map(function(f){return '<button class="module-card" style="width:100%;margin-top:11px" data-route="'+f.route+'"><span class="module-icon">'+f.icon+'</span><strong>'+f.title+'</strong><p>'+f.desc+'</p><span class="module-meta">Открыть →</span></button>';}).join('')+'</aside></div>';
+ const steps=CURRICULUM.map(function(u,i){
+   const routeLabel=u.route==='letters'?'К буквам':u.route==='reading'?'К чтению':u.route==='words'?'В словарь':u.route==='phrases'?'К фразам':'Играть';
+   return '<article class="curriculum-unit"><div class="unit-number">'+u.n+'</div><div class="unit-main"><div class="unit-eyebrow">ЭТАП '+u.n+' · '+u.status.toUpperCase()+'</div><h3>'+u.title+'</h3><p>'+u.sub+'</p><ul>'+u.outcomes.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="unit-check"><span>✓ Критерий освоения</span><p>'+u.check+'</p></div><button class="btn '+(i===0?'btn-purple':'btn-ghost')+' btn-small" data-route="'+u.route+'">'+routeLabel+' →</button></div><div class="unit-illustration">'+u.icon+'</div></article>';
+ }).join('');
+ return headerOf('УЧЕБНЫЙ МАРШРУТ','Не просто играть — учиться','Последовательность рассчитана на начинающих детей: сначала форма буквы, затем различение, чтение коротких слогов, слова и первые фразы. Каждый этап описывает, чему именно ребёнок должен научиться.',true)
+ +'<section class="curriculum-note"><span>📘</span><div><strong>Как устроен курс</strong><p>Это проектная учебная программа для первой версии продукта, а не заявление об официальной аккредитации. До использования как формального курса нужно экспертное рецензирование преподавателем арабского языка и тестирование на детях.</p></div></section>'
+ +'<section class="curriculum-summary"><div><span>🔤</span><strong>28</strong><small>букв</small></div><div><span>◌َ</span><strong>3</strong><small>коротких гласных</small></div><div><span>📚</span><strong>'+WORDS.length+'</strong><small>слов и выражений</small></div><div><span>🎮</span><strong>'+GAME_DEFS.length+'</strong><small>игровых режима</small></div></section>'
+ +'<div class="curriculum-list">'+steps+'</div>'
+ +'<section class="panel curriculum-next"><div class="curriculum-next-art"><img src="./assets/rabbit.svg" alt="Али"></div><div><div class="eyebrow">ПРИНЦИП ОБУЧЕНИЯ</div><h2>Познакомься → попробуй → вспомни → примени</h2><p>Один экран — одна понятная цель. После короткого объяснения ребёнок выполняет задание, получает обратную связь и применяет навык в игре. Дальше курс постепенно расширяется к чтению и разговору.</p></div></section>';
 }
 function renderLetters(){
   const nx=nextLetter();
@@ -240,16 +234,16 @@ function renderLesson(){
     const opts=shuffle([{idx:state.letter,ch:l.ch,name:l.name}].concat(randomItems(LETTERS.map(function(x,i){return {idx:i,ch:x.ch,name:x.name};}),3,state.letter).map(function(x){return {idx:x.idx,ch:x.ch,name:x.name};})));
     state.lessonOptions=opts.map(function(x){return x.idx;});
     bubble='<strong>Мини-задание</strong>Найди букву '+l.name+'. Выбери её среди четырёх вариантов!';
-    bottomButton='<button class="btn btn-primary" data-action="skip-to-write">Потренировать письмо →</button>';
+    bottomButton='<button class="btn btn-ghost" data-action="speak-letter">🔊 Послушать ещё раз</button>';
     rightPanel='<div class="eyebrow">ПРОВЕРЬ СЕБЯ</div><h2>Где буква '+l.name+'?</h2><p>Вспомни форму и точки, а затем нажми на правильную букву.</p><div class="answer-grid">'+opts.map(function(x){return '<button class="answer-option" data-action="lesson-answer" data-i="'+x.idx+'"><span class="arabic" style="font-size:34px">'+x.ch+'</span><br><small>'+x.name+'</small></button>';}).join('')+'</div><div id="lesson-feedback" class="feedback">'+(quizFeedback||'Ты справишься!')+'</div>';
   }else{
     bubble='<strong>Почти готово!</strong>Обведи букву на карточке. Можно рисовать пальцем, мышью или стилусом.';
-    bottomButton='<button class="btn btn-primary" data-action="complete-lesson">Завершить урок <span>+20 XP</span></button>';
-    rightPanel='<div class="eyebrow">МАСТЕРСКАЯ ПИСЬМА</div><h2>Попробуй обвести</h2><p>Веди пальцем по пунктирной линии и почувствуй форму буквы.</p><div class="writing-pad"><span class="trace-guide arabic" lang="ar" dir="rtl">'+l.ch+'</span><canvas id="trace-canvas" aria-label="Поле для тренировки написания арабской буквы"></canvas></div><div class="panel-bottom"><p>Ничего страшного, если с первого раза не получится.</p><button class="text-link" data-action="clear-canvas">Очистить ↻</button></div>';
+    bottomButton='<button class="btn btn-primary" data-action="complete-lesson" '+(state.writeReady?'':'disabled')+'>Завершить урок <span>+20 XP</span></button>';
+    rightPanel='<div class="eyebrow">МАСТЕРСКАЯ ПИСЬМА</div><h2>Попробуй обвести</h2><p>Веди пальцем по пунктирной линии и почувствуй форму буквы.</p><div class="writing-pad"><span class="trace-guide arabic" lang="ar" dir="rtl">'+l.ch+'</span><canvas id="trace-canvas" aria-label="Поле для тренировки написания арабской буквы"></canvas></div><div class="panel-bottom"><p id="writing-status">'+(state.writeReady?'Отлично! Ты уже потренировался.':'Обведи форму, чтобы открыть завершение урока.')+'</p><button class="text-link" data-action="clear-canvas">Очистить ↻</button></div>'
   }
   const dots=steps.map(function(s,i){return '<span class="'+(i===step?'active':'')+'"></span>';}).join('');
   const walking=step===1?'walk':'';
-  return '<div class="page-heading"><div><div class="eyebrow">УРОК '+String(state.letter+1).padStart(2,'0')+' · ОСТРОВ БУКВ</div><h1>Знакомимся: '+l.name+'</h1><p>Учимся через историю, слух, игру и движение — маленькими шагами.</p></div><button class="btn btn-ghost btn-small" data-route="letters">← К буквам</button></div><div class="lesson-layout"><section class="panel lesson-main"><div class="lesson-topline"><span>'+steps[step].toUpperCase()+'</span><span>Шаг '+(step+1)+' из 4</span></div><div class="progress-line"><i style="width:'+((step+1)/4*100)+'%"></i></div><div class="lesson-scene"><span class="lesson-sun"></span><span class="lesson-cloud">☁</span><div class="lesson-bubble" id="lesson-bubble">'+bubble+'</div><span class="lesson-object">'+word.emoji+'</span><img class="lesson-character '+walking+'" id="lesson-character" src="./assets/rabbit.svg" alt="Али идёт знакомиться с буквой"><div class="lesson-letter '+(step===1?'reveal':'')+'" id="lesson-letter"><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></div><span class="scene-caption">ТРОПИНКА НОВЫХ ОТКРЫТИЙ</span></div><div class="lesson-bottom"><p>★ За урок ты получишь 20 XP</p>'+bottomButton+'</div><div class="step-dots">'+dots+'</div></section><aside class="panel lesson-info">'+rightPanel+'</aside></div>';
+  return '<div class="page-heading"><div><div class="eyebrow">УРОК '+String(state.letter+1).padStart(2,'0')+' · ОСТРОВ БУКВ</div><h1>Знакомимся: '+l.name+'</h1><p>Учимся через историю, слух, игру и движение — маленькими шагами.</p></div><button class="btn btn-ghost btn-small" data-route="letters">← К буквам</button></div><div class="lesson-layout"><section class="panel lesson-main"><div class="lesson-topline"><span>'+steps[step].toUpperCase()+'</span><span>Шаг '+(step+1)+' из 4</span></div><div class="progress-line"><i style="width:'+((step+1)/4*100)+'%"></i></div><div class="lesson-scene"><span class="lesson-sun"></span><span class="lesson-cloud">☁</span><div class="lesson-bubble" id="lesson-bubble">'+bubble+'</div><span class="lesson-object" aria-hidden="true">✦</span><img class="lesson-character '+walking+'" id="lesson-character" src="./assets/rabbit.svg" alt="Али идёт знакомиться с буквой"><div class="lesson-letter '+(step===1?'reveal':'')+'" id="lesson-letter"><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></div><span class="scene-caption">ТРОПИНКА НОВЫХ ОТКРЫТИЙ</span></div><div class="lesson-bottom"><p>★ За урок ты получишь 20 XP</p>'+bottomButton+'</div><div class="step-dots">'+dots+'</div></section><aside class="panel lesson-info">'+rightPanel+'</aside></div>';
 }
 function renderCelebration(){
   const completed=LETTERS[state.justCompleted==null?0:state.justCompleted],next=nextLetter(),all=state.learned.length>=28;
@@ -257,6 +251,26 @@ function renderCelebration(){
   const title=all?'Ты прошёл весь алфавит!':'Буква '+completed.name+' теперь в твоей коллекции!';
   const sub=all?'Все 28 букв знакомы тебе. Это большая победа — впереди слова, фразы и новые игры.':'Каждый урок делает тебя увереннее. Отдохни мгновение, а потом отправляйся знакомиться со следующей буквой.';
   return '<section class="celebration-wrap page-enter"><div class="celebration-top"><span class="celebration-confetti">✦</span><span class="celebration-confetti">✧</span><span class="celebration-confetti">✦</span><span class="celebration-confetti">★</span><span class="celebration-confetti">✧</span></div><div class="surface celebration-card"><div class="celebration-ribbon">🏆 УРОК ЗАВЕРШЁН</div><div class="celebration-main"><div class="celebration-character"><span class="celebration-orbit orbit-one">✦</span><span class="celebration-orbit orbit-two">⭐</span><span class="celebration-orbit orbit-three">✧</span><img src="./assets/rabbit.svg" alt="Али радуется твоей победе"></div><div class="celebration-copy"><span class="pill">✨ МАЛЕНЬКАЯ ПОБЕДА</span><h1>'+title+'</h1><p>'+sub+'</p><div class="celebration-rewards"><div><span>⭐</span><strong>+20 XP</strong><small>за урок</small></div><div><span>🔤</span><strong>'+state.learned.length+' / 28</strong><small>букв знакомы</small></div><div><span>🔥</span><strong>'+state.streak+'</strong><small>дней подряд</small></div></div><div class="celebration-progress"><div class="progress-line"><i style="width:'+(state.learned.length/28*100)+'%"></i></div><small>'+Math.round(state.learned.length/28*100)+'% алфавита открыто</small></div><div class="hero-actions"><button class="btn btn-primary" data-action="next-letter">'+(all?'Повторить буквы':'Встречаем '+nextL.name)+' <span>→</span></button><button class="btn btn-ghost" data-route="path">На карту приключений</button></div></div></div></div><div class="celebration-footer">🌷 Ты старался — и это главное. Али тобой гордится! 🌷</div></section>';
+}
+const VOWELS=[
+ {id:'fatha',name:'Фатха',mark:'َ',sound:'а',sample:'بَ',place:'Сверху буквы',desc:'Короткий звук «а». Маленькая наклонная черта стоит над буквой.',color:'#fff0d6',example:'بَ'},
+ {id:'kasra',name:'Касра',mark:'ِ',sound:'и',sample:'بِ',place:'Под буквой',desc:'Короткий звук «и». Маленькая наклонная черта стоит под буквой.',color:'#e5f4ff',example:'بِ'},
+ {id:'damma',name:'Дамма',mark:'ُ',sound:'у',sample:'بُ',place:'Сверху буквы',desc:'Короткий звук «у». Маленький завиток стоит над буквой.',color:'#e2f8ed',example:'بُ'}
+];
+function renderReading(){
+ const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
+ const cards=VOWELS.map(function(x,j){return '<button class="vowel-card '+(j===i?'selected':'')+'" data-action="reading-pick" data-i="'+j+'"><span class="vowel-ar arabic" lang="ar" dir="rtl">ب'+x.mark+'</span><strong>'+x.name+'</strong><small>Звук «'+x.sound+'»</small></button>';}).join('');
+ const choices=['а','и','у'].map(function(x){return '<button class="answer-option '+(state.readingAnswer===x?(x===v.sound?'correct':'incorrect'):'')+'" data-action="reading-answer" data-answer="'+x+'" '+(state.readingAnswer===v.sound?'disabled':'')+'>«'+x+'»</button>';}).join('');
+ return headerOf('МАСТЕРСКАЯ ЧТЕНИЯ','Буква + звук = слог','Теперь посмотрим, как короткие гласные помогают читать простые слоги. Этот этап идёт после знакомства с формой букв.',true)
+ +'<section class="reading-intro panel"><div class="reading-step-tag">УРОК '+(i+1)+' ИЗ 3 · КОРОТКИЕ ГЛАСНЫЕ</div><div class="reading-board" style="--vowel-bg:'+v.color+'"><div class="reading-board-copy"><span class="eyebrow">'+v.place.toUpperCase()+'</span><h2>'+v.name+'</h2><p>'+v.desc+'</p><div class="reading-example arabic" lang="ar" dir="rtl">ب'+v.mark+'</div><div class="reading-sound">Звук: <b>«'+v.sound+'»</b></div><button class="btn btn-purple" data-action="reading-speak" data-i="'+i+'">🔊 Послушать слог</button></div><div class="reading-board-art"><div class="vowel-orbit orbit-a">✦</div><div class="vowel-orbit orbit-b">✧</div><img src="./assets/rabbit.svg" alt="Али помогает читать слоги"></div></div><div class="vowel-cards">'+cards+'</div></section><section class="panel reading-quiz"><div class="panel-head"><div><h3>Мини-проверка</h3><small>Узнаём звук по знаку</small></div><span class="pill">+5 XP за правильный ответ</span></div><div class="reading-prompt"><p>Какой короткий звук мы слышим?</p><strong class="arabic" lang="ar" dir="rtl">ب'+v.mark+'</strong></div><div class="reading-answers">'+choices+'</div><div class="feedback">'+(state.readingAnswer?(state.readingAnswer===v.sound?'Верно! Ты заметил знак и выбрал нужный звук.':'Посмотри ещё раз на знак и попробуй другой ответ.'):'Выбери звук. Не спеши!')+'</div><div class="panel-bottom"><p>Учимся читать маленькими шагами.</p><button class="btn btn-primary" data-action="reading-next" '+(state.readingAnswer!==v.sound?'disabled':'')+'>'+(i===2?'Завершить этап ✓':'Следующий знак →')+'</button></div></section>';
+}
+function answerReading(answer){
+ const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
+ if(state.readingAnswer===v.sound)return;
+ state.readingAnswer=answer;
+ if(answer===v.sound){addXP(5);state.answers++;saveState();toast('Правильно! +5 XP ⭐');}
+ else toast('Почти! Посмотри, где стоит знак.');
+ render();
 }
 function renderWords(){
   const cats=CATEGORIES.map(function(c){return '<button class="filter-btn '+(state.wordFilter===c.id?'active':'')+'" data-action="word-filter" data-filter="'+c.id+'">'+c.label+'</button>';}).join('');
@@ -341,24 +355,34 @@ function wireCanvas(){
   const ctx=canvas.getContext('2d'),dpr=Math.min(window.devicePixelRatio||1,2);
   const rect=canvas.getBoundingClientRect();canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(rect.height*dpr);ctx.scale(dpr,dpr);
   ctx.lineWidth=6;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#6544d9';
-  let down=false,last=null;
+  let down=false,last=null,moved=false;
   function pos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
-  canvas.addEventListener('pointerdown',function(e){down=true;last=pos(e);canvas.setPointerCapture(e.pointerId);e.preventDefault();});
-  canvas.addEventListener('pointermove',function(e){if(!down)return;const p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;e.preventDefault();});
+  canvas.addEventListener('pointerdown',function(e){down=true;moved=false;last=pos(e);canvas.setPointerCapture(e.pointerId);e.preventDefault();});
+  canvas.addEventListener('pointermove',function(e){
+    if(!down)return;const p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;e.preventDefault();
+    if(!moved){moved=true;state.writeReady=true;const btn=document.querySelector('[data-action="complete-lesson"]');if(btn)btn.disabled=false;const status=document.getElementById('writing-status');if(status)status.textContent='Получилось! Теперь можно завершить урок.';
+    }
+  });
   ['pointerup','pointercancel','pointerleave'].forEach(function(ev){canvas.addEventListener(ev,function(){down=false;last=null;});});
   canvas.clear=function(){ctx.clearRect(0,0,canvas.width,canvas.height);};
 }
-function clearCanvas(){const c=document.getElementById('trace-canvas');if(c&&c.clear)c.clear();}
+function clearCanvas(){
+  const c=document.getElementById('trace-canvas');if(c&&c.clear)c.clear();
+  state.writeReady=false;
+  const btn=document.querySelector('[data-action="complete-lesson"]');if(btn)btn.disabled=true;
+  const status=document.getElementById('writing-status');if(status)status.textContent='Обведи форму, чтобы открыть завершение урока.';
+}
 function showModal(title,body,buttons){
   const root=document.getElementById('modal-root');if(!root)return;
   root.innerHTML='<div class="modal-backdrop" role="dialog" aria-modal="true"><div class="modal-card"><h2>'+title+'</h2><p>'+body+'</p><div class="modal-actions">'+buttons+'</div></div></div>';
 }
 function closeModal(){const root=document.getElementById('modal-root');if(root)root.innerHTML='';}
 function finishLetter(){
+  if(!state.writeReady){toast('Сначала обведи букву — это последний шаг урока!');return;}
   const i=state.letter;state.justCompleted=i;
   if(state.learned.indexOf(i)<0){state.learned.push(i);state.learned.sort(function(a,b){return a-b;});addXP(20);}
   else{addXP(5);}
-  markMission('lesson');state.lessonStep=0;quizFeedback='';route('celebration');
+  markMission('lesson');state.lessonStep=0;state.writeReady=false;quizFeedback='';route('celebration');
 }
 function answerLetter(i){
   const target=state.letter,fb=document.getElementById('lesson-feedback');
@@ -406,25 +430,34 @@ function pickMemory(i){
 }
 function handleAction(action,el){
   const i=Number(el.dataset.i);
-  if(action==='continue'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';route('lesson');return;}
-  if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
+  if(action==='continue'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;}
+  if(action==='open-reading'){state.readingIndex=0;route('reading');return;}
+  if(action==='reading-pick'){state.readingIndex=Number(el.dataset.i)||0;state.readingAnswer='';render();return;}
+  if(action==='reading-speak'){const v=VOWELS[Number(el.dataset.i)];if(v)speak(v.sample);return;}
+  if(action==='reading-answer'){answerReading(el.dataset.answer);return;}
+  if(action==='reading-next'){if(Number(state.readingIndex)>=2){state.readingIndex=0;state.readingAnswer='';addXP(10);toast('Этап чтения завершён! +10 XP ✨');route('path');return;}state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
+  if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
   if(action==='open-letter'){
     if(!isUnlocked(i)){toast('Сначала закончи предыдущий урок — и эта буква откроется! 🔒');return;}
-    state.letter=i;state.lessonStep=0;quizFeedback='';route('lesson');return;
+    state.letter=i;state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;
   }
   if(action==='meet-letter'){
+    if(el.dataset.busy==='1')return;
+    el.dataset.busy='1';el.disabled=true;
     const character=document.getElementById('lesson-character'),letter=document.getElementById('lesson-letter'),bubble=document.getElementById('lesson-bubble');
     if(character)character.classList.add('walk');if(letter)letter.classList.add('reveal');
-    if(bubble)bubble.innerHTML='<strong>Вот она! Это '+currentLetter().name+'!</strong>Буква улыбается тебе. Послушай её и посмотри, чем она отличается от других.';
-    speak(currentLetter().ch);el.textContent='Познакомились — дальше →';el.dataset.action='lesson-next';return;
+    if(bubble)bubble.innerHTML='<strong>Вот она! Это '+currentLetter().name+'!</strong>Али подошёл к букве. Послушай её звук и посмотри на форму.';
+    speak(currentLetter().ch);
+    setTimeout(function(){state.lessonStep=1;state.writeReady=false;quizFeedback='';render();},1250);
+    return;
   }
   if(action==='lesson-next'){
     state.lessonStep=Math.min(2,state.lessonStep+1);quizFeedback='';render();return;
   }
   if(action==='lesson-answer'){answerLetter(i);return;}
-  if(action==='skip-to-write'){state.lessonStep=3;render();return;}
+  if(action==='skip-to-write'){toast('Сначала попробуй узнать букву — затем перейдём к письму.');return;}
   if(action==='speak-letter'){speak(currentLetter().ch);return;}
-  if(action==='speak-word'){speak(letterWord(currentLetter()).ar);state.wordsHeard++;markMission('listen');return;}
+  if(action==='speak-word'){speak(letterWord(currentLetter()).ar);state.wordsHeard++;markMission('listen');saveState();return;}
   if(action==='clear-canvas'){clearCanvas();return;}
   if(action==='complete-lesson'){finishLetter();return;}
   if(action==='word-filter'){state.wordFilter=el.dataset.filter;render();return;}
@@ -433,7 +466,7 @@ function handleAction(action,el){
   if(action==='speak-dialog'){speak(PHRASES[0].ar+' ... '+PHRASES[4].ar+' ... '+PHRASES[5].ar+' ... '+PHRASES[1].ar);markMission('listen');return;}
   if(action==='start-game'){state.game=null;startGame(el.dataset.game);return;}
   if(action==='leave-game'){state.game=null;route('games');return;}
-  if(action==='game-speak'){const g=state.game;if(g){const l=LETTERS[g.target];const w=WORDS.find(function(x){return x.idx===g.target;});speak(w?w.ar:l.ch);markMission('listen');}return;}
+  if(action==='game-speak'){const g=state.game;if(g){const l=LETTERS[g.target];const w=letterWord(l);speak(g.kind==='listen'?w.ar:(w.ar));markMission('listen');}return;}
   if(action==='game-answer'){const g=state.game;if(g)advanceGame(Number(el.dataset.i)===g.target);return;}
   if(action==='game-answer-word'){
     const g=state.game;if(!g)return;const selected=WORDS[Number(el.dataset.word)];advanceGame(!!selected&&(g.kind==='listen'?selected.idx===g.target:selected.idx===g.target));return;
@@ -466,5 +499,13 @@ document.getElementById('mobile-menu').addEventListener('click',function(){docum
 document.getElementById('about-button').addEventListener('click',about);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();document.getElementById('mobile-nav').classList.remove('open');}});
 visitToday();
-if(location.hash&&['home','path','letters','words','phrases','games','profile'].indexOf(location.hash.slice(1))>=0)state.view=location.hash.slice(1);
+// Every fresh visit starts at the welcome map, not inside a saved lesson.
+// A lesson can be resumed from the home CTA; stale #lesson links never bypass onboarding.
+const allowedViews=['home','path','letters','words','phrases','games','profile','reading'];
+const requestedView=(location.hash||'').slice(1);
+if(allowedViews.indexOf(requestedView)>=0)state.view=requestedView;
+else{
+  state.view='home';
+  try{history.replaceState(null,'',location.pathname+location.search+'#home');}catch(e){}
+}
 render();
