@@ -260,13 +260,13 @@ const VOWELS=[
 function renderReading(){
  const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
  const cards=VOWELS.map(function(x,j){return '<button class="vowel-card '+(j===i?'selected':'')+'" data-action="reading-pick" data-i="'+j+'"><span class="vowel-ar arabic" lang="ar" dir="rtl">ب'+x.mark+'</span><strong>'+x.name+'</strong><small>Звук «'+x.sound+'»</small></button>';}).join('');
- const choices=['а','и','у'].map(function(x){return '<button class="answer-option '+(state.readingAnswer===x?(x===v.sound?'correct':'incorrect'):'')+'" data-action="reading-answer" data-answer="'+x+'" '+(state.readingAnswer?'disabled':'')+'>«'+x+'»</button>';}).join('');
+ const choices=['а','и','у'].map(function(x){return '<button class="answer-option '+(state.readingAnswer===x?(x===v.sound?'correct':'incorrect'):'')+'" data-action="reading-answer" data-answer="'+x+'" '+(state.readingAnswer===v.sound?'disabled':'')+'>«'+x+'»</button>';}).join('');
  return headerOf('МАСТЕРСКАЯ ЧТЕНИЯ','Буква + звук = слог','Теперь посмотрим, как короткие гласные помогают читать простые слоги. Этот этап идёт после знакомства с формой букв.',true)
  +'<section class="reading-intro panel"><div class="reading-step-tag">УРОК '+(i+1)+' ИЗ 3 · КОРОТКИЕ ГЛАСНЫЕ</div><div class="reading-board" style="--vowel-bg:'+v.color+'"><div class="reading-board-copy"><span class="eyebrow">'+v.place.toUpperCase()+'</span><h2>'+v.name+'</h2><p>'+v.desc+'</p><div class="reading-example arabic" lang="ar" dir="rtl">ب'+v.mark+'</div><div class="reading-sound">Звук: <b>«'+v.sound+'»</b></div><button class="btn btn-purple" data-action="reading-speak" data-i="'+i+'">🔊 Послушать слог</button></div><div class="reading-board-art"><div class="vowel-orbit orbit-a">✦</div><div class="vowel-orbit orbit-b">✧</div><img src="./assets/rabbit.svg" alt="Али помогает читать слоги"></div></div><div class="vowel-cards">'+cards+'</div></section><section class="panel reading-quiz"><div class="panel-head"><div><h3>Мини-проверка</h3><small>Узнаём звук по знаку</small></div><span class="pill">+5 XP за правильный ответ</span></div><div class="reading-prompt"><p>Какой короткий звук мы слышим?</p><strong class="arabic" lang="ar" dir="rtl">ب'+v.mark+'</strong></div><div class="reading-answers">'+choices+'</div><div class="feedback">'+(state.readingAnswer?(state.readingAnswer===v.sound?'Верно! Ты заметил знак и выбрал нужный звук.':'Посмотри ещё раз на знак и попробуй другой ответ.'):'Выбери звук. Не спеши!')+'</div><div class="panel-bottom"><p>Учимся читать маленькими шагами.</p><button class="btn btn-primary" data-action="reading-next" '+(state.readingAnswer!==v.sound?'disabled':'')+'>'+(i===2?'Завершить этап ✓':'Следующий знак →')+'</button></div></section>';
 }
 function answerReading(answer){
  const i=Math.max(0,Math.min(2,Number(state.readingIndex)||0)),v=VOWELS[i];
- if(state.readingAnswer)return;
+ if(state.readingAnswer===v.sound)return;
  state.readingAnswer=answer;
  if(answer===v.sound){addXP(5);state.answers++;saveState();toast('Правильно! +5 XP ⭐');}
  else toast('Почти! Посмотри, где стоит знак.');
@@ -382,7 +382,7 @@ function finishLetter(){
   const i=state.letter;state.justCompleted=i;
   if(state.learned.indexOf(i)<0){state.learned.push(i);state.learned.sort(function(a,b){return a-b;});addXP(20);}
   else{addXP(5);}
-  markMission('lesson');state.lessonStep=0;quizFeedback='';route('celebration');
+  markMission('lesson');state.lessonStep=0;state.writeReady=false;quizFeedback='';route('celebration');
 }
 function answerLetter(i){
   const target=state.letter,fb=document.getElementById('lesson-feedback');
@@ -430,16 +430,16 @@ function pickMemory(i){
 }
 function handleAction(action,el){
   const i=Number(el.dataset.i);
-  if(action==='continue'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';route('lesson');return;}
+  if(action==='continue'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;}
   if(action==='open-reading'){state.readingIndex=0;route('reading');return;}
   if(action==='reading-pick'){state.readingIndex=Number(el.dataset.i)||0;state.readingAnswer='';render();return;}
   if(action==='reading-speak'){const v=VOWELS[Number(el.dataset.i)];if(v)speak(v.sample);return;}
   if(action==='reading-answer'){answerReading(el.dataset.answer);return;}
   if(action==='reading-next'){if(Number(state.readingIndex)>=2){state.readingIndex=0;state.readingAnswer='';addXP(10);toast('Этап чтения завершён! +10 XP ✨');route('path');return;}state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
-  if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
+  if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
   if(action==='open-letter'){
     if(!isUnlocked(i)){toast('Сначала закончи предыдущий урок — и эта буква откроется! 🔒');return;}
-    state.letter=i;state.lessonStep=0;quizFeedback='';route('lesson');return;
+    state.letter=i;state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;
   }
   if(action==='meet-letter'){
     if(el.dataset.busy==='1')return;
