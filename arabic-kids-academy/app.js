@@ -371,10 +371,10 @@ function showModal(title,body,buttons){
 function closeModal(){const root=document.getElementById('modal-root');if(root)root.innerHTML='';}
 function finishLetter(){
   if(!state.writeReady){toast('Сначала обведи букву — это последний шаг урока!');return;}
-  const i=state.letter;state.justCompleted=i;
+  const i=state.letter,starsBefore=state.stars;state.justCompleted=i;
   if(state.learned.indexOf(i)<0){state.learned.push(i);state.learned.sort(function(a,b){return a-b;});addXP(20);}
   else{addXP(5);}
-  markMission('lesson');state.lessonStep=0;state.writeReady=false;quizFeedback='';route('celebration');
+  markMission('lesson');state.lastLessonStars=Math.max(1,state.stars-starsBefore);state.lessonStep=0;state.writeReady=false;quizFeedback='';route('celebration');
 }
 function answerLetter(i){
   const target=state.letter,fb=document.getElementById('lesson-feedback');
