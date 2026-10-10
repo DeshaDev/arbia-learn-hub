@@ -5,7 +5,7 @@ const app = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const dataMatch = app.match(/const DATA=(\[[\s\S]*?\])\.map/);
 assert.ok(dataMatch, "the app should define the lesson word data");
-const rows = JSON.parse(dataMatch[1]);
+const rows = JSON.parse(dataMatch[1].replace(/'/g, '"'));
 assert.equal(rows.length, 28, "Arabic alphabet data should include 28 letters");
 assert.equal(new Set(rows.map(row => row[0])).size, 28, "Arabic letters should be unique");
 for (const [index, row] of rows.entries()) {
