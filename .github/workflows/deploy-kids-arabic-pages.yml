@@ -24,10 +24,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate app JavaScript
+        run: node --check kids-arabic-russian/app.js
+      - name: Validate lesson data
+        run: node kids-arabic-russian/tests/data-check.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
