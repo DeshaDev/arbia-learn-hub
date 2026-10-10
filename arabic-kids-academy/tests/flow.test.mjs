@@ -3,7 +3,7 @@ import vm from "node:vm";
 import assert from "node:assert/strict";
 
 const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
-const store = new Map();
+const store = new Map([["ali-academy-progress-v2", JSON.stringify({learned:[0],xp:35,letter:1,view:"lesson"})]]);
 const ctx2d = { scale(){}, clearRect(){}, beginPath(){}, moveTo(){}, lineTo(){}, stroke(){} };
 const elements = new Map();
 function makeElement(id) {
@@ -37,7 +37,7 @@ const context = {
     removeItem(k){store.delete(k);}
   },
   history:{replaceState(){}},
-  location:{hash:"",pathname:"/",search:""},
+  location:{hash:"#lesson",pathname:"/",search:""},
   SpeechSynthesisUtterance,
   setTimeout(fn){fn();return 1;},clearTimeout(){},
   confirm(){return true;},
@@ -49,6 +49,7 @@ vm.runInContext(appSource,context,{timeout:3000});
 const app = document.getElementById("app");
 assert.match(app.innerHTML,/kid-welcome/, "a fresh visitor should see the child's welcome screen");
 assert.match(app.innerHTML,/Я Али! Давай найдём первую букву!/, "the homepage should invite a first-time learner");
+assert.equal(vm.runInContext("state.learned.length",context),0,"legacy progress from the prototype should not skip the redesigned onboarding");
 assert.match(app.innerHTML,/hero-letter[\s\S]*?ا/, "the first adventure should feature Alif, not Ba");
 assert.equal(vm.runInContext("state.view",context),"home");
 vm.runInContext("handleAction('continue',{dataset:{}})",context);
