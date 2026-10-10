@@ -336,4 +336,21 @@
  <circle cx="115" cy="38" r="5" fill="#FFD45D"/><path d="M119 119l4 8 8 4-8 4-4 8-4-8-8-4 8-4Z" fill="#F3A1B4"/>
  <path d="M32 123Q80 139 128 123" fill="none" stroke="#D8CCFF" stroke-width="5" stroke-linecap="round"/>
 </symbol>
+<symbol id="mailbox" viewBox="0 0 160 160">
+ <ellipse cx="82" cy="144" rx="35" ry="6" fill="#4D6580" opacity=".13"/>
+ <path d="M78 91H92L96 141H74Z" fill="#9CAAC7"/>
+ <path d="M70 138H101" stroke="#7789AC" stroke-width="6" stroke-linecap="round"/>
+ <path d="M31 45Q31 24 52 24H108Q129 24 129 45V107Q129 119 116 119H44Q31 119 31 107Z" fill="#65BDF2" stroke="#3F90D6" stroke-width="4"/>
+ <path d="M35 48Q35 30 54 30H107Q124 30 125 48V59H35Z" fill="#A8E5FF"/>
+ <path d="M40 61H120V91H40Z" fill="#425C95" stroke="#34508A" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M47 64 80 88 113 64" fill="none" stroke="#83D5FC" stroke-width="5" stroke-linejoin="round"/>
+ <path d="M36 93H124V108Q124 115 115 115H45Q36 115 36 108Z" fill="#4A9FE1"/>
+ <path d="M104 34 104 12 119 12 119 42" fill="#FB8C73" stroke="#E66B5B" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M104 13H137L130 26H104Z" fill="#FFB59E" stroke="#E66B5B" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M48 101H112" stroke="#9ADFFF" stroke-width="4" stroke-linecap="round"/>
+ <path d="M56 81 80 99 104 81V111H56Z" fill="#FFF2BB" stroke="#EAC46B" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M59 84 80 100 101 84" fill="none" stroke="#EAC46B" stroke-width="2.5" stroke-linejoin="round"/>
+ <circle cx="44" cy="40" r="4" fill="#FFF"/>
+ <path d="M22 23 25 30 32 33 25 36 22 43 19 36 12 33 19 30Z" fill="#F7CB58"/>
+</symbol>
 </svg>

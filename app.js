@@ -302,7 +302,7 @@ function startGame(kind){
     });
     state.game={kind:kind,deck:shuffle(deck),flipped:[],matched:[],moves:0,done:false,rewarded:false};
   }else{
-    state.game={kind:kind,round:0,score:0,targets:targets,done:false,rewarded:false,answered:false,selectedOption:null,correct:false,heard:false};
+    state.game={kind:kind,round:0,score:0,targets:targets,done:false,rewarded:false,answered:false,selectedOption:null,selectedWord:null,mailFeedback:'',correct:false,heard:false};
     state.game.target=targets[0];state.game.options=makeGameOptions(kind,state.game.target);
   }
   render();
@@ -340,20 +340,20 @@ function renderGameStage(){
   let prompt='',visual='',options='',soundButton='';
   if(kind==='catch'){
     prompt='Послушай и выбери букву, с которой начинается слово.';
-    visual='<div class="game-challenge-picture">'+svgArt(word.art,'game-target-art')+'<span class="picture-spark">✦</span></div><div class="game-target-copy"><strong>'+word.ru+'</strong><small>Какой звук ты услышал в начале?</small></div>';
+    visual='<div class="hop-challenge-illustration"><div class="game-challenge-picture">'+svgArt(word.art,'game-target-art')+'<span class="picture-spark">✦</span></div><img class="game-river-rabbit" src="./assets/rabbit.svg" alt="Али готов прыгать"></div><div class="game-target-copy"><strong>'+word.ru+'</strong><small>Послушай слово — затем прыгни на камень с первой буквой.</small></div>';
     soundButton='<button class="game-audio-button" data-action="game-speak"><span>▶</span><b>Послушать слово</b></button>';
-    options=g.options.map(function(l){const right=g.answered&&Number(l.idx)===Number(g.target),picked=g.answered&&Number(g.selectedOption)===Number(l.idx);return '<button class="letter-jump '+(right?'is-correct':'')+(picked&&!g.correct?' is-wrong':'')+'" data-action="game-answer" data-i="'+l.idx+'" '+(g.answered?'disabled':'')+'><span class="jump-cloud"></span><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></button>';}).join('');
+    options=g.options.map(function(l){const right=g.answered&&Number(l.idx)===Number(g.target),picked=g.answered&&Number(g.selectedOption)===Number(l.idx);return '<button class="letter-jump '+(right?'is-correct':'')+(picked&&!g.correct?' is-wrong':'')+'" data-action="game-answer" data-i="'+l.idx+'" '+(g.answered||!g.heard?'disabled':'')+'><span class="jump-cloud"></span><span class="arabic" lang="ar" dir="rtl">'+l.ch+'</span><small>'+l.name+'</small></button>';}).join('');
   }else if(kind==='mail'){
     prompt='Отправь в почтовый домик слово, которое начинается с этой буквы.';
-    visual='<div class="mail-challenge"><div class="mail-target-letter"><span class="arabic" lang="ar" dir="rtl">'+target.ch+'</span><small>'+target.name+'</small></div>'+svgArt('mail-game','mailbox-art')+'</div><div class="game-target-copy"><strong>Кому подходит '+target.ch+'?</strong><small>Выбери посылку, чтобы отправить её другу.</small></div>';
-    options=g.options.map(function(w){const right=g.answered&&Number(w.idx)===Number(g.target),picked=g.answered&&Number(g.selectedOption)===Number(WORDS.indexOf(w));return '<button class="picture-choice '+(right?'is-correct':'')+(picked&&!g.correct?' is-wrong':'')+'" data-action="game-answer-word" data-word="'+WORDS.indexOf(w)+'" '+(g.answered?'disabled':'')+'><span class="picture-choice-art">'+svgArt(artForWord(w),'choice-art-svg')+'</span><strong>'+esc(w.ru)+'</strong><span class="arabic" lang="ar" dir="rtl">'+w.ar+'</span></button>';}).join('');
+    visual='<div class="mail-challenge '+(g.selectedWord!=null?'has-selection':'')+'"><div class="mail-target-letter"><span class="arabic" lang="ar" dir="rtl">'+target.ch+'</span><small>'+target.name+'</small></div><div class="mailbox-dropzone '+(g.selectedWord!=null?'ready':'')+'">'+svgArt('mailbox','mailbox-art')+'<small>'+(g.selectedWord!=null?'Посылка выбрана':'Ждёт письмо')+'</small></div></div><div class="game-target-copy"><strong>Найди друга для '+target.ch+'</strong><small>Выбери картинку, затем отправь её в почтовый ящик.</small></div>';
+    options=g.options.map(function(w){const wordIndex=WORDS.indexOf(w),picked=g.selectedWord===wordIndex,right=g.answered&&Number(w.idx)===Number(g.target);return '<button class="picture-choice mail-parcel '+(picked?'is-selected ':'')+(right?'is-correct':'')+'" data-action="mail-select" data-word="'+wordIndex+'" '+(g.answered?'disabled':'')+'><span class="picture-choice-art">'+svgArt(artForWord(w),'choice-art-svg')+'</span><strong>'+esc(w.ru)+'</strong><span class="arabic" lang="ar" dir="rtl">'+w.ar+'</span></button>';}).join('');
   }else{
     prompt='Послушай арабское слово и найди его картинку.';
     visual='<div class="listen-cloud-stage"><div class="listen-wave wave-one"></div><div class="listen-wave wave-two"></div>'+svgArt('listen-game','listen-main-art')+'<span class="listen-pulse">♫</span></div><div class="game-target-copy"><strong>Что сказал Али?</strong><small>Слушай внимательно — слово пока спрятано.</small></div>';
     soundButton='<button class="game-audio-button '+(g.heard?'heard':'')+'" data-action="game-speak"><span>▶</span><b>'+(g.heard?'Послушай ещё раз':'Послушать слово')+'</b></button>';
-    options=g.options.map(function(w){const targetWord=WORDS.find(function(x){return x.idx===g.target;});const right=g.answered&&w.ar===targetWord.ar,picked=g.answered&&Number(g.selectedOption)===Number(WORDS.indexOf(w));return '<button class="picture-choice listen-choice '+(right?'is-correct':'')+(picked&&!g.correct?' is-wrong':'')+'" data-action="game-answer-word" data-word="'+WORDS.indexOf(w)+'" '+(g.answered?'disabled':'')+'><span class="picture-choice-art">'+svgArt(artForWord(w),'choice-art-svg')+'</span><strong>'+esc(w.ru)+'</strong></button>';}).join('');
+    options=g.options.map(function(w){const targetWord=WORDS.find(function(x){return x.idx===g.target;});const right=g.answered&&w.ar===targetWord.ar,picked=g.answered&&Number(g.selectedOption)===Number(WORDS.indexOf(w));return '<button class="picture-choice listen-choice '+(right?'is-correct':'')+(picked&&!g.correct?' is-wrong':'')+'" data-action="game-answer-word" data-word="'+WORDS.indexOf(w)+'" '+(g.answered||!g.heard?'disabled':'')+'><span class="picture-choice-art">'+svgArt(artForWord(w),'choice-art-svg')+'</span><strong>'+esc(w.ru)+'</strong></button>';}).join('');
   }
-  const feedback=g.answered?'<div class="answer-feedback '+(g.correct?'right':'try-again')+'">'+(g.correct?'Отлично! Ты помог другу!':'Почти! Подсветил правильный ответ — теперь ты его знаешь.')+'</div><button class="btn btn-primary game-main-action" data-action="game-next">'+(g.round===4?'Завершить игру':'Следующий раунд')+' →</button>':'<div class="game-options '+(kind==='catch'?'letter-jump-grid':'picture-choice-grid')+'">'+options+'</div><div class="game-feedback-line">'+(kind==='catch'?'Выбери камень с нужной буквой.':kind==='mail'?'Доставим правильное слово!':'Включи звук столько раз, сколько нужно.')+'</div>';
+  const feedback=g.answered?'<div class="answer-feedback '+(g.correct?'right':'try-again')+'">'+(g.correct?'Отлично! Ты помог другу!':'Почти! Подсветил правильный ответ — теперь ты его знаешь.')+'</div><button class="btn btn-primary game-main-action" data-action="game-next">'+(g.round===4?'Завершить игру':'Следующий раунд')+' →</button>':(kind==='mail'?'<div class="game-options picture-choice-grid mail-choice-grid">'+options+'</div><div class="mail-delivery-controls"><p class="game-feedback-line">'+esc(g.mailFeedback||(g.selectedWord!=null?'Нажми «Доставить», чтобы отправить посылку.':'Выбери картинку, которая начинается с буквы '+target.ch+'.'))+'</p><button class="btn btn-primary game-main-action mail-deliver" data-action="mail-deliver" '+(g.selectedWord==null?'disabled':'')+'>Доставить посылку →</button></div>':'<div class="game-options '+(kind==='catch'?'letter-jump-grid':'picture-choice-grid')+'">'+options+'</div><div class="game-feedback-line">'+(kind==='catch'?(g.heard?'Выбери камень с нужной буквой.':'Сначала послушай слово — камни пока закрыты.'):'Сначала послушай слово, затем найди подходящую картинку.')+'</div>');
   if(complete)return '<section class="game-stage game-finished">'+header+'<div class="game-finish-art">'+svgArt(meta.art,'finish-game-svg')+'</div><span class="eyebrow">МИССИЯ ВЫПОЛНЕНА</span><h1>Ты отлично справился!</h1><p>Правильных ответов: '+g.score+' из 5</p><div class="finish-stars">⭐ ⭐ ⭐</div><button class="btn btn-primary game-main-action" data-action="finish-game">Забрать награду →</button></section>';
   return '<section class="game-stage game-stage-'+kind+'">'+header+'<div class="game-level-heading"><span class="eyebrow">'+meta.title.toUpperCase()+'</span><h1>'+meta.title+'!</h1><p>'+prompt+'</p><div class="game-level-track">'+Array.from({length:5},function(_,i){return '<span class="'+(i<g.round?'done':i===g.round?'current':'')+'">'+(i<g.round?'✓':i+1)+'</span>';}).join('')+'</div></div><div class="game-challenge-panel"><div class="game-challenge-visual">'+visual+'</div>'+soundButton+'<div class="game-options '+(kind==='catch'?'letter-jump-grid':'picture-choice-grid')+'">'+options+'</div>'+feedback+'</div></section>';
 }
@@ -422,7 +422,7 @@ function pickMemory(i){
     const a=g.deck[g.flipped[0]],b=g.deck[g.flipped[1]];
     if(a.pair===b.pair&&a.type!==b.type){
       g.matched=g.matched.concat(g.flipped);g.flipped=[];addXP(3);
-      if(g.matched.length===g.deck.length){g.done=true;if(!g.rewarded){g.rewarded=true;addXP(20);markMission('game');state.gamesPlayed++;saveState();}}
+      if(g.matched.length===g.deck.length){g.done=true;}
       setTimeout(render,320);
     }else{
       if(memoryTimeout)clearTimeout(memoryTimeout);
@@ -500,6 +500,19 @@ function handleAction(action,el){
   if(action==='game-answer'){
     const g=state.game;if(g)advanceGame(Number(el.dataset.i)===g.target,Number(el.dataset.i));return;
   }
+  if(action==='mail-select'){
+    const g=state.game,pick=Number(el.dataset.word);
+    if(!g||g.kind!=='mail'||g.answered||!Number.isInteger(pick)||!WORDS[pick])return;
+    g.selectedWord=pick;g.mailFeedback='Посылка выбрана! Проверь букву и отправляй её.';render();return;
+  }
+  if(action==='mail-deliver'){
+    const g=state.game;
+    if(!g||g.kind!=='mail'||g.answered||g.selectedWord==null){toast('Сначала выбери посылку!');return;}
+    const selected=WORDS[g.selectedWord];
+    if(selected&&selected.idx===Number(g.target)){advanceGame(true,g.selectedWord);}
+    else{g.selectedWord=null;g.mailFeedback='Эта посылка не подходит. Посмотри на первую букву и попробуй другую.';render();toast('Попробуем другую посылку!');}
+    return;
+  }
   if(action==='game-answer-word'){
     const g=state.game;if(!g)return;
     const pick=Number(el.dataset.word),selected=WORDS[pick],targetWord=WORDS.find(function(w){return w.idx===g.target;});
@@ -509,7 +522,7 @@ function handleAction(action,el){
   if(action==='game-next'){
     const g=state.game;if(!g||!g.answered)return;
     if(g.round>=4){g.done=true;render();return;}
-    g.round++;g.target=g.targets[g.round];g.options=makeGameOptions(g.kind,g.target);g.answered=false;g.selectedOption=null;g.correct=false;g.heard=false;render();return;
+    g.round++;g.target=g.targets[g.round];g.options=makeGameOptions(g.kind,g.target);g.answered=false;g.selectedOption=null;g.selectedWord=null;g.mailFeedback='';g.correct=false;g.heard=false;render();return;
   }
   if(action==='finish-game'){
     const g=state.game;if(g&&!g.rewarded){g.rewarded=true;addXP(15+g.score*3);markMission('game');state.gamesPlayed++;saveState();}
