@@ -24,7 +24,7 @@ assert.ok(js.includes("const CURRICULUM=["), "parent-facing learning sequence mu
 const homeStart=js.indexOf("function renderHome()");
 const homeEnd=js.indexOf("function plural(",homeStart);
 const home=js.slice(homeStart,homeEnd);
-assert.ok(home.includes("kid-welcome") && home.includes("home-worlds"), "home should be a child-first welcome plus a compact journey map");
+assert.ok(home.includes("adventure-home") && home.includes("world-card-grid"), "home should be a child-first welcome plus a compact journey map");
 assert.ok(!home.includes("mission-strip") && !home.includes("kpi-row") && !home.includes("content-grid"), "the child home should not be a stats dashboard");
 const lessonStart=js.indexOf("function renderLesson()");
 const lessonEnd=js.indexOf("function renderReading(",lessonStart);
@@ -33,13 +33,13 @@ assert.ok(lesson.includes("kid-lesson") && lesson.includes("kid-task-card") && l
 assert.ok(!lesson.includes("lesson-layout") && !lesson.includes("rightPanel"), "lesson should not duplicate content in a two-column adult dashboard");
 assert.ok(js.includes("function renderCelebration("), "completing a letter should have a child-friendly celebration");
 assert.ok(js.includes("function canVisit(view)"), "learning worlds should unlock based on progress");
-assert.ok(css.includes(".kid-welcome") && css.includes(".kid-task-card") && css.includes(".storybook-map"), "child-first UI components should be styled");
+assert.ok(css.includes(".adventure-home") && css.includes(".kid-task-card") && css.includes(".storybook-map"), "child-first UI components should be styled");
 assert.ok(css.includes("rabbit-hops-to-letter"), "rabbit should travel toward the target letter");
 assert.ok(js.includes("stale #lesson links never bypass onboarding"), "cold page loads should not open halfway through a lesson");
 assert.ok(js.includes("if(!state.writeReady)"), "a lesson cannot be completed without practising writing");
 assert.ok(js.includes("state.readingAnswer===v.sound"), "vowel practice should require a correct answer before advancing");
 assert.ok(!js.slice(js.indexOf("function renderLesson()"), js.indexOf("function renderReading(", js.indexOf("function renderLesson()"))).includes("lesson-object"), "the focused lesson scene should not place floating unrelated objects in the sky");
 assert.ok(rabbit.includes("@keyframes") && rabbit.includes("Али"), "animated mascot must exist");
-assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes("@keyframes rabbit-hops-to-letter"), "lesson and world scene styles must exist");
-assert.ok(css.includes("@media(max-width:700px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
+assert.ok(css.includes(".adventure-stage") && css.includes(".lesson-scene") && css.includes("@keyframes rabbit-hops-to-letter"), "lesson and world scene styles must exist");
+assert.ok(css.includes("@media(max-width:680px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
 console.log("PASS: 28 letters, 8 learning views, 4 game modes, sound, tracing, save-state, animated rabbit, responsive design.");
