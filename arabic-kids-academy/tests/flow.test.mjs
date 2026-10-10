@@ -47,8 +47,8 @@ const context = {
 vm.createContext(context);
 vm.runInContext(appSource,context,{timeout:3000});
 const app = document.getElementById("app");
-assert.match(app.innerHTML,/kid-welcome/, "a fresh visitor should see the child's welcome screen");
-assert.match(app.innerHTML,/Я Али! Давай найдём первую букву!/, "the homepage should invite a first-time learner");
+assert.match(app.innerHTML,/adventure-home/, "a fresh visitor should see the child's welcome screen");
+assert.match(app.innerHTML,/Привет! Я Али\. Пойдём исследовать мир!/, "the homepage should invite a first-time learner");
 assert.equal(vm.runInContext("state.learned.length",context),0,"legacy progress from the prototype should not skip the redesigned onboarding");
 assert.doesNotMatch(app.innerHTML,/hero-letter|\bا\b/, "the homepage should not expose a lesson letter before the child starts");
 assert.equal(vm.runInContext("state.view",context),"home");
