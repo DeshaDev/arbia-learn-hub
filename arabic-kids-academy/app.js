@@ -157,7 +157,7 @@ function markMission(id){
 }
 function addXP(n){state.xp+=n;state.stars+=Math.max(1,Math.round(n/10));saveState();}
 function currentLetter(){return LETTERS[state.letter]||LETTERS[0];}
-function letterWord(l){return WORDS.find(function(w){return w.idx===l.idx;})||{ar:l.word,ru:l.ru,tr:l.trans,emoji:l.emoji,idx:l.idx};}
+function letterWord(l){const idx=LETTERS.indexOf(l);return WORDS.find(function(w){return w.idx===idx;})||{ar:l.word,ru:l.ru,tr:l.trans,emoji:l.emoji,idx:idx};}
 function headerOf(kicker,title,desc,includeRabbit){return '<div class="page-heading"><div><div class="eyebrow">'+kicker+'</div><h1>'+title+'</h1><p>'+desc+'</p></div>'+(includeRabbit===false?'':rabbit())+'</div>';}
 function sectionTitle(kicker,title,desc,link,label){return '<div class="section-head"><div><div class="eyebrow">'+kicker+'</div><h2>'+title+'</h2>'+(desc?'<p>'+desc+'</p>':'')+'</div>'+(link?'<button class="text-link" data-route="'+link+'">'+(label||'Смотреть всё')+' →</button>':'')+'</div>';}
 function missionDoneCount(){return ['lesson','game','listen'].filter(function(k){return !!state.missions[k];}).length;}
@@ -206,7 +206,7 @@ function renderPath(){
       const l=LETTERS[i],done=state.learned.indexOf(i)>=0,current=i===next,locked=!isUnlocked(i);
       nodes+='<button class="map-step '+(done?'done':current?'current':locked?'locked':'')+'" data-action="open-letter" data-i="'+i+'" '+(locked?'aria-label="Буква '+l.name+', пока закрыта"':'')+'><strong>'+l.ch+'</strong><small>'+(done?'✓':String(i+1).padStart(2,'0'))+'</small></button>';
     }
-    const progress=LETTERS.slice(s.from,s.to+1).filter(function(l){return state.learned.indexOf(l.i)>=0;}).length;
+    const progress=LETTERS.slice(s.from,s.to+1).filter(function(l){return state.learned.indexOf(LETTERS.indexOf(l))>=0;}).length;
     html+='<section class="panel" style="margin-bottom:15px"><div class="panel-head"><div><span class="pill">'+s.icon+' '+s.title+'</span><h3 style="margin-top:10px">'+['Остров букв','Сад слов','Лес звуков','Площадь фраз'][si]+'</h3><small>'+s.desc+'</small></div><div class="tiny muted">'+progress+' / '+(s.to-s.from+1)+'</div></div><div class="map-steps">'+nodes+'</div><div class="panel-bottom"><p>За каждое занятие ты собираешь XP и открываешь новые достижения.</p><button class="btn btn-ghost btn-small" data-route="'+s.route+'">Исследовать →</button></div></section>';
   });
   const feats=[
@@ -237,7 +237,7 @@ function renderLesson(){
     bottomButton='<button class="btn btn-purple" data-action="lesson-next">Я готов потренироваться →</button>';
     rightPanel='<div class="eyebrow">ЗАПОМНИ ФОРМУ</div><h2>Буква '+l.name+'</h2><div class="large-glyph arabic">'+l.ch+'</div><div class="example-box"><span class="example-emoji">👀</span><div class="example-word"><strong>На что похожа?</strong><small>'+l.shape+'</small><small>'+l.dots+'</small></div></div><div class="tip-box">💡 '+l.hint+'</div><div class="actions-row" style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-ghost" data-action="speak-letter">🔊 Буква</button><button class="btn btn-ghost" data-action="speak-word">🔊 Слово</button></div>';
   }else if(step===2){
-    const opts=shuffle([l].concat(randomItems(LETTERS.map(function(x,i){return {idx:i,ch:x.ch,name:x.name};}),3,l.i).map(function(x){return {idx:x.idx,ch:x.ch,name:x.name};})));
+    const opts=shuffle([{idx:state.letter,ch:l.ch,name:l.name}].concat(randomItems(LETTERS.map(function(x,i){return {idx:i,ch:x.ch,name:x.name};}),3,state.letter).map(function(x){return {idx:x.idx,ch:x.ch,name:x.name};})));
     state.lessonOptions=opts.map(function(x){return x.idx===undefined?x.idx=x.i:x.idx;});
     bubble='<strong>Мини-задание</strong>Найди букву '+l.name+'. Выбери её среди четырёх вариантов!';
     bottomButton='<button class="btn btn-primary" data-action="skip-to-write">Потренировать письмо →</button>';
@@ -289,8 +289,8 @@ function makeGameOptions(kind,target){
     const good=WORDS.find(function(w){return w.idx===target;})||WORDS[target];
     return shuffle([good].concat(randomItems(WORDS.filter(function(w){return w.idx!==target;}),2)));
   }
-  const good=LETTERS[target];
-  return shuffle([good].concat(LETTERS.filter(function(l){return l.i!==target;}).sort(function(){return Math.random()-.5;}).slice(0,2)));
+  const good={idx:target,ch:LETTERS[target].ch,name:LETTERS[target].name};
+  return shuffle([good].concat(LETTERS.map(function(l,i){return {idx:i,ch:l.ch,name:l.name};}).filter(function(l){return l.idx!==target;}).sort(function(){return Math.random()-.5;}).slice(0,2)));
 }
 function gameTarget(){return state.game&&state.game.targets[state.game.round]!==undefined?state.game.targets[state.game.round]:0;}
 function renderGameStage(){
