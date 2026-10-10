@@ -92,8 +92,8 @@ const BADGES = [
  {id:'xp100',icon:'⭐',title:'Сто звёздных шагов',desc:'Набери 100 XP',ok:s=>s.xp>=100},
  {id:'streak3',icon:'🔥',title:'Привычка растёт',desc:'Занимайся 3 дня подряд',ok:s=>s.streak>=3}
 ];
-const STORE_KEY = 'ali-academy-progress-v4';
-function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false,writeReady:false,readingIndex:0,readingAnswer:'',readingCompleted:false};}
+const STORE_KEY = 'ali-academy-progress-v5';
+function freshState(){return {learned:[],xp:0,stars:0,streak:0,lastVisit:'',view:'home',letter:0,lessonStep:0,wordFilter:'all',search:'',wordsHeard:0,gamesPlayed:0,answers:0,missions:{},missionDate:'',game:null,levelOpen:false,writeReady:false,readingIndex:0,readingAnswer:'',readingCompleted:false,lessonChecks:{heardLetter:false,heardWord:false,repeated:false}};}
 function loadState(){
   try{
     const raw=JSON.parse(localStorage.getItem(STORE_KEY)||'null');
@@ -418,35 +418,58 @@ function pickMemory(i){
 }
 function handleAction(action,el){
   const i=Number(el.dataset.i);
-  if(action==='continue'){if(state.learned.length>=28){route('path');return;}state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;}
+  if(action==='continue'){if(state.learned.length>=28){route('path');return;}state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;state.lessonChecks={heardLetter:false,heardWord:false,repeated:false};quizFeedback='';route('lesson');return;}
   if(action==='home-world'){const world=el.dataset.world;if(!canVisit(world)){route(world);return;}if(world==='letters'){if(state.learned.length>=28){route('letters');return;}state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;route('lesson');return;}route(world);return;}
   if(action==='open-reading'){state.readingIndex=0;route('reading');return;}
   if(action==='reading-pick'){state.readingIndex=Number(el.dataset.i)||0;state.readingAnswer='';render();return;}
   if(action==='reading-speak'){const v=VOWELS[Number(el.dataset.i)];if(v)speak(v.sample);return;}
   if(action==='reading-answer'){answerReading(el.dataset.answer);return;}
   if(action==='reading-next'){if(Number(state.readingIndex)>=2){state.readingIndex=0;state.readingAnswer='';state.readingCompleted=true;addXP(10);toast('Этап чтения завершён! +10 XP ✨');route('path');return;}state.readingIndex=Math.min(2,(state.readingIndex||0)+1);state.readingAnswer='';render();return;}
-  if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
+  if(action==='next-letter'){state.letter=nextLetter();state.lessonStep=0;state.writeReady=false;state.lessonChecks={heardLetter:false,heardWord:false,repeated:false};quizFeedback='';state.game=null;route(state.learned.length>=28?'letters':'lesson');return;}
   if(action==='open-letter'){
     if(!isUnlocked(i)){toast('Сначала закончи предыдущий урок — и эта буква откроется! 🔒');return;}
-    state.letter=i;state.lessonStep=0;state.writeReady=false;quizFeedback='';route('lesson');return;
+    state.letter=i;state.lessonStep=0;state.writeReady=false;state.lessonChecks={heardLetter:false,heardWord:false,repeated:false};quizFeedback='';route('lesson');return;
   }
   if(action==='meet-letter'){
     if(el.dataset.busy==='1')return;
     el.dataset.busy='1';el.disabled=true;
+    state.lessonChecks={heardLetter:false,heardWord:false,repeated:false};
     const character=document.getElementById('lesson-character'),letter=document.getElementById('lesson-letter'),bubble=document.getElementById('lesson-bubble');
     if(character)character.classList.add('walk');if(letter)letter.classList.add('reveal');
-    if(bubble)bubble.innerHTML='<strong>Вот она! Это '+currentLetter().name+'!</strong>Али подошёл к букве. Послушай её звук и посмотри на форму.';
-    speak(currentLetter().ch);
-    setTimeout(function(){state.lessonStep=1;state.writeReady=false;quizFeedback='';render();},1250);
+    if(bubble)bubble.innerHTML='<strong>Сюрприз! Сейчас увидим!</strong>Али нашёл нового друга. Давай познакомимся вместе.';
+    setTimeout(function(){state.lessonStep=1;state.writeReady=false;quizFeedback='';render();},1150);
     return;
   }
   if(action==='lesson-next'){
+    if(state.lessonStep===1){
+      const c=state.lessonChecks||{};
+      if(!c.heardLetter||!c.heardWord||!c.repeated){toast('Послушай букву и картинку, а потом повтори вслух!');return;}
+    }
     state.lessonStep=Math.min(2,state.lessonStep+1);quizFeedback='';render();return;
+  }
+  if(action==='i-repeated'){
+    const c=state.lessonChecks||{};
+    if(!c.heardLetter||!c.heardWord){toast('Сначала послушай и букву, и слово!');return;}
+    state.lessonChecks={heardLetter:true,heardWord:true,repeated:true};saveState();render();toast('Здорово! Переходим к заданию ✨');return;
   }
   if(action==='lesson-answer'){answerLetter(i);return;}
   if(action==='skip-to-write'){toast('Сначала попробуй узнать букву — затем перейдём к письму.');return;}
-  if(action==='speak-letter'){speak(currentLetter().ch);return;}
-  if(action==='speak-word'){speak(letterWord(currentLetter()).ar);state.wordsHeard++;markMission('listen');saveState();return;}
+  if(action==='speak-letter'){
+    speak(currentLetter().ch);
+    if(state.view==='lesson'&&state.lessonStep===1){
+      const c=state.lessonChecks||{heardLetter:false,heardWord:false,repeated:false};
+      state.lessonChecks={heardLetter:true,heardWord:!!c.heardWord,repeated:false};saveState();render();
+    }
+    return;
+  }
+  if(action==='speak-word'){
+    speak(letterWord(currentLetter()).ar);state.wordsHeard++;markMission('listen');saveState();
+    if(state.view==='lesson'&&state.lessonStep===1){
+      const c=state.lessonChecks||{heardLetter:false,heardWord:false,repeated:false};
+      state.lessonChecks={heardLetter:!!c.heardLetter,heardWord:true,repeated:false};saveState();render();
+    }
+    return;
+  }
   if(action==='clear-canvas'){clearCanvas();return;}
   if(action==='complete-lesson'){finishLetter();return;}
   if(action==='word-filter'){state.wordFilter=el.dataset.filter;render();return;}
@@ -455,10 +478,24 @@ function handleAction(action,el){
   if(action==='speak-dialog'){speak(PHRASES[0].ar+' ... '+PHRASES[4].ar+' ... '+PHRASES[5].ar+' ... '+PHRASES[1].ar);markMission('listen');return;}
   if(action==='start-game'){state.game=null;startGame(el.dataset.game);return;}
   if(action==='leave-game'){state.game=null;route('games');return;}
-  if(action==='game-speak'){const g=state.game;if(g){const l=LETTERS[g.target];const w=letterWord(l);speak(g.kind==='listen'?w.ar:(w.ar));markMission('listen');}return;}
-  if(action==='game-answer'){const g=state.game;if(g)advanceGame(Number(el.dataset.i)===g.target);return;}
+  if(action==='game-speak'){
+    const g=state.game;if(g){
+      const w=letterWord(LETTERS[g.target]);speak(w.ar);g.heard=true;markMission('listen');render();
+    }return;
+  }
+  if(action==='game-answer'){
+    const g=state.game;if(g)advanceGame(Number(el.dataset.i)===g.target,Number(el.dataset.i));return;
+  }
   if(action==='game-answer-word'){
-    const g=state.game;if(!g)return;const selected=WORDS[Number(el.dataset.word)];advanceGame(!!selected&&(g.kind==='listen'?selected.idx===g.target:selected.idx===g.target));return;
+    const g=state.game;if(!g)return;
+    const pick=Number(el.dataset.word),selected=WORDS[pick],targetWord=WORDS.find(function(w){return w.idx===g.target;});
+    const correct=!!selected&&(g.kind==='listen'?selected.ar===targetWord.ar:selected.idx===g.target);
+    advanceGame(correct,pick);return;
+  }
+  if(action==='game-next'){
+    const g=state.game;if(!g||!g.answered)return;
+    if(g.round>=4){g.done=true;render();return;}
+    g.round++;g.target=g.targets[g.round];g.options=makeGameOptions(g.kind,g.target);g.answered=false;g.selectedOption=null;g.correct=false;g.heard=false;render();return;
   }
   if(action==='finish-game'){
     const g=state.game;if(g&&!g.rewarded){g.rewarded=true;addXP(15+g.score*3);markMission('game');state.gamesPlayed++;saveState();}
