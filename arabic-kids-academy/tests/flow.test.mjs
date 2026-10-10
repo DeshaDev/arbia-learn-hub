@@ -77,7 +77,7 @@ vm.runInContext("handleAction('i-repeated',{dataset:{}})",context);
 assert.equal(vm.runInContext("state.lessonChecks.repeated",context),true,"the child must confirm repeating before moving on");
 vm.runInContext("handleAction('lesson-next',{dataset:{}})",context);
 assert.equal(vm.runInContext("state.lessonStep",context),2,"the story should move to recognition after listening and repeating");
-assert.match(app.innerHTML,/Найди букву Алиф!/, "recognition should ask one clear question");
+assert.match(app.innerHTML,/Найди такую же букву!/, "recognition should ask one clear question");
 vm.runInContext("answerLetter(0)",context);
 assert.equal(vm.runInContext("state.lessonStep",context),3,"correct recognition should lead to handwriting");
 assert.match(app.innerHTML,/Нарисуй Алиф!/, "the final lesson step should be writing practice");
