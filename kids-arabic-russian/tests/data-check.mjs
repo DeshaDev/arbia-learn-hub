@@ -12,6 +12,6 @@ for(const [i,x] of letters.entries())assert.ok(x.ch&&x.nm&&x.ar&&x.wd&&x.tr&&x.r
 for(const feature of ["function hub()","function learn(i)","function paint()","function g1()","function g2()","function g3()"])assert.ok(app.includes(feature),`missing original feature ${feature}`);
 assert.ok(html.includes('id="app"'),"original app mount should exist");
 assert.ok(html.includes('href="./styles.css"')&&html.includes('src="./app.js"'),"split assets should be linked");
-assert.ok(js.includes("./assets/mascot.svg"),"homepage should use its mascot");
+assert.ok(app.includes("./assets/mascot.svg"),"homepage should use its mascot");
 assert.ok(css.includes(".welcome-card")&&css.includes("@media"),"responsive refinements should exist");
 console.log("PASS: original 28-letter dataset, lessons, tracing, three games, mascot, and responsive styling.");
