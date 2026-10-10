@@ -19,6 +19,6 @@ assert.ok(js.includes("localStorage") && js.includes("ali-academy-progress-v1"),
 assert.ok(html.includes('href="./styles.css"') && html.includes('src="./app.js"'), "page assets must be linked");
 assert.ok(html.includes('id="app"') && html.includes('id="mobile-nav"'), "app mount and responsive navigation must exist");
 assert.ok(rabbit.includes("@keyframes") && rabbit.includes("Али"), "animated mascot must exist");
-assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes(".rabbitWalk"), "lesson and world scene styles must exist");
+assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes("@keyframes rabbitWalk"), "lesson and world scene styles must exist");
 assert.ok(css.includes("@media(max-width:620px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
 console.log("PASS: 28 letters, 8 learning views, 4 game modes, sound, tracing, save-state, animated rabbit, responsive design.");
