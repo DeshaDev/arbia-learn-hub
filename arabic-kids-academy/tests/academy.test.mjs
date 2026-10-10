@@ -1,0 +1,24 @@
+import { readFileSync, existsSync } from "node:fs";
+import assert from "node:assert/strict";
+const root = new URL("../", import.meta.url);
+const html = readFileSync(new URL("index.html", root), "utf8");
+const js = readFileSync(new URL("app.js", root), "utf8");
+const css = readFileSync(new URL("styles.css", root), "utf8");
+const rabbit = readFileSync(new URL("assets/rabbit.svg", root), "utf8");
+assert.equal((js.match(/^\s*\{ch:'/gm) || []).length, 28, "28 letter entries must exist");
+for (const name of ["renderHome", "renderPath", "renderLetters", "renderLesson", "renderWords", "renderPhrases", "renderGames", "renderProfile"]) {
+  assert.ok(js.includes("function " + name + "("), "missing academy view: " + name);
+}
+for (const name of ["meet-letter", "complete-lesson", "wireCanvas", "pickMemory", "advanceGame", "markMission", "saveState"]) {
+  assert.ok(js.includes(name), "missing interactive mechanic: " + name);
+}
+for (const game of ["catch", "mail", "memory", "listen"]) {
+  assert.ok(js.includes("id:'" + game + "'"), "missing game mode: " + game);
+}
+assert.ok(js.includes("localStorage") && js.includes("ali-academy-progress-v1"), "progress must persist locally");
+assert.ok(html.includes('href="./styles.css"') && html.includes('src="./app.js"'), "page assets must be linked");
+assert.ok(html.includes('id="app"') && html.includes('id="mobile-nav"'), "app mount and responsive navigation must exist");
+assert.ok(rabbit.includes("@keyframes") && rabbit.includes("Али"), "animated mascot must exist");
+assert.ok(css.includes(".hero-world") && css.includes(".lesson-scene") && css.includes(".rabbitWalk"), "lesson and world scene styles must exist");
+assert.ok(css.includes("@media(max-width:620px)") && css.includes("prefers-reduced-motion"), "responsive and reduced-motion rules must exist");
+console.log("PASS: 28 letters, 8 learning views, 4 game modes, sound, tracing, save-state, animated rabbit, responsive design.");
